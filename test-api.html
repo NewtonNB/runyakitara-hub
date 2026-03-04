@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API v1 Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        
+        .test-section h2 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .loading {
+            color: #f59e0b;
+        }
+        
+        .success {
+            color: #10b981;
+        }
+        
+        .error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 API v1 Tester</h1>
+        
+        <div class="test-section">
+            <h2>📚 Dictionary API</h2>
+            <button onclick="testAPI('/api/v1/dictionary', 'dict-all')">Get All Words</button>
+            <button onclick="testAPI('/api/v1/dictionary?page=1&limit=5', 'dict-paginated')">Get 5 Words</button>
+            <button onclick="testAPI('/api/v1/dictionary/1', 'dict-single')">Get Word #1</button>
+            <button onclick="testAPI('/api/v1/dictionary?category=greetings', 'dict-category')">Filter by Category</button>
+            <div id="dict-all" class="response"></div>
+            <div id="dict-paginated" class="response" style="display:none;"></div>
+            <div id="dict-single" class="response" style="display:none;"></div>
+            <div id="dict-category" class="response" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📖 Lessons API</h2>
+            <button onclick="testAPI('/api/v1/lessons', 'lessons-all')">Get All Lessons</button>
+            <button onclick="testAPI('/api/v1/lessons?level=beginner', 'lessons-beginner')">Beginner Lessons</button>
+            <button onclick="testAPI('/api/v1/lessons/1', 'lessons-single')">Get Lesson #1</button>
+            <div id="lessons-all" class="response"></div>
+            <div id="lessons-beginner" class="response" style="display:none;"></div>
+            <div id="lessons-single" class="response" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>✍️ Grammar API</h2>
+            <button onclick="testAPI('/api/v1/grammar', 'grammar-all')">Get All Topics</button>
+            <button onclick="testAPI('/api/v1/grammar?difficulty=easy', 'grammar-easy')">Easy Topics</button>
+            <button onclick="testAPI('/api/v1/grammar/1', 'grammar-single')">Get Topic #1</button>
+            <div id="grammar-all" class="response"></div>
+            <div id="grammar-easy" class="response" style="display:none;"></div>
+            <div id="grammar-single" class="response" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>💬 Proverbs API</h2>
+            <button onclick="testAPI('/api/v1/proverbs', 'proverbs-all')">Get All Proverbs</button>
+            <button onclick="testAPI('/api/v1/proverbs/1', 'proverbs-single')">Get Proverb #1</button>
+            <div id="proverbs-all" class="response"></div>
+            <div id="proverbs-single" class="response" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📰 Articles API</h2>
+            <button onclick="testAPI('/api/v1/articles', 'articles-all')">Get All Articles</button>
+            <button onclick="testAPI('/api/v1/articles?category=news', 'articles-news')">News Articles</button>
+            <button onclick="testAPI('/api/v1/articles/1', 'articles-single')">Get Article #1</button>
+            <div id="articles-all" class="response"></div>
+            <div id="articles-news" class="response" style="display:none;"></div>
+            <div id="articles-single" class="response" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📧 Contact API</h2>
+            <button onclick="testContactAPI()">Submit Contact Form</button>
+            <div id="contact-response" class="response"></div>
+        </div>
+    </div>
+    
+    <script>
+        async function testAPI(endpoint, responseId) {
+            const responseDiv = document.getElementById(responseId);
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<span class="loading">Loading...</span>';
+            
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (data.success) {
+                    responseDiv.innerHTML = '<span class="success">✓ Success</span>\n\n' + JSON.stringify(data, null, 2);
+                } else {
+                    responseDiv.innerHTML = '<span class="error">✗ Error</span>\n\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                responseDiv.innerHTML = '<span class="error">✗ Network Error</span>\n\n' + error.message;
+            }
+        }
+        
+        async function testContactAPI() {
+            const responseDiv = document.getElementById('contact-response');
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<span class="loading">Submitting...</span>';
+            
+            const testData = {
+                name: 'Test User',
+                email: 'test@example.com',
+                subject: 'API Test',
+                message: 'This is a test message from the API tester'
+            };
+            
+            try {
+                const response = await fetch('/api/v1/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    responseDiv.innerHTML = '<span class="success">✓ Success</span>\n\n' + JSON.stringify(data, null, 2);
+                } else {
+                    responseDiv.innerHTML = '<span class="error">✗ Error</span>\n\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                responseDiv.innerHTML = '<span class="error">✗ Network Error</span>\n\n' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

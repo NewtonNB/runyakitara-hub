@@ -1,0 +1,425 @@
+/* ========================================
+   PREMIUM FORM VALIDATION SYSTEM
+   ======================================== */
+
+/* Valid state with premium styling */
+.is-valid {
+    border-color: #10b981 !important;
+    background: linear-gradient(to right, rgba(16, 185, 129, 0.03) 0%, white 100%) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 20px !important;
+    padding-right: 48px !important;
+    animation: successPulse 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.is-valid:focus {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12), 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 0 20px rgba(16, 185, 129, 0.15) !important;
+}
+
+@keyframes successPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* Invalid state with premium styling */
+.is-invalid {
+    border-color: #ef4444 !important;
+    background: linear-gradient(to right, rgba(239, 68, 68, 0.03) 0%, white 100%) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C/line%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C/line%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 20px !important;
+    padding-right: 48px !important;
+    animation: errorShake 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.is-invalid:focus {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12), 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 0 20px rgba(239, 68, 68, 0.15) !important;
+}
+
+@keyframes errorShake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+/* Error message with premium design */
+.error-message {
+    display: block;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #ef4444;
+    font-weight: 500;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%);
+    border-left: 4px solid #ef4444;
+    border-radius: 10px;
+    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+}
+
+.error-message::before {
+    content: "⚠ ";
+    margin-right: 6px;
+    font-size: 16px;
+}
+
+/* Success message with premium design */
+.success-message {
+    display: block;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #10b981;
+    font-weight: 500;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.08) 100%);
+    border-left: 4px solid #10b981;
+    border-radius: 10px;
+    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+}
+
+.success-message::before {
+    content: "✓ ";
+    margin-right: 6px;
+    font-size: 16px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Textarea validation icons */
+textarea.is-valid,
+textarea.is-invalid {
+    background-position: right 14px top 14px !important;
+}
+
+/* Select validation */
+select.is-valid,
+select.is-invalid {
+    background-position: right 44px center !important;
+}
+
+/* Form group with validation */
+.form-group.has-error input,
+.form-group.has-error textarea,
+.form-group.has-error select {
+    border-color: #ef4444;
+    animation: errorShake 0.5s;
+}
+
+.form-group.has-success input,
+.form-group.has-success textarea,
+.form-group.has-success select {
+    border-color: #10b981;
+    animation: successPulse 0.6s;
+}
+
+/* Required field indicator */
+.form-group label.required::after {
+    content: " *";
+    color: #ef4444;
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+/* Character counter with premium styling */
+.char-counter {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #64748b;
+    text-align: right;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.char-counter.warning {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.char-counter.danger {
+    color: #ef4444;
+    font-weight: 600;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Loading state with premium spinner */
+.form-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.form-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #667eea;
+    border-right-color: #764ba2;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Validation summary with premium design */
+.validation-summary {
+    background: linear-gradient(135deg, rgba(254, 226, 226, 0.8) 0%, rgba(254, 226, 226, 1) 100%);
+    border: 2px solid #fca5a5;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.validation-summary-title {
+    font-weight: 700;
+    font-size: 16px;
+    color: #991b1b;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.validation-summary-title::before {
+    content: "⚠";
+    font-size: 24px;
+}
+
+.validation-summary-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.validation-summary-list li {
+    color: #dc2626;
+    font-size: 14px;
+    padding: 8px 0;
+    padding-left: 28px;
+    position: relative;
+    line-height: 1.5;
+}
+
+.validation-summary-list li::before {
+    content: "•";
+    position: absolute;
+    left: 12px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Inline validation hints */
+.field-hint {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #64748b;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+/* Password strength indicator with premium design */
+.password-strength {
+    margin-top: 12px;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.password-strength-bar {
+    height: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.password-strength-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    to {
+        left: 100%;
+    }
+}
+
+.password-strength-bar.weak {
+    width: 33%;
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+.password-strength-bar.medium {
+    width: 66%;
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.password-strength-bar.strong {
+    width: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.password-strength-text {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.password-strength-text.weak {
+    color: #ef4444;
+}
+
+.password-strength-text.medium {
+    color: #f59e0b;
+}
+
+.password-strength-text.strong {
+    color: #10b981;
+}
+
+/* Focus states with premium glow */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12), 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 0 20px rgba(102, 126, 234, 0.15);
+    transform: translateY(-1px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover states */
+input:hover:not(:focus),
+textarea:hover:not(:focus),
+select:hover:not(:focus) {
+    border-color: #cbd5e1;
+    transition: border-color 0.2s;
+}
+
+/* Disabled state */
+input:disabled,
+textarea:disabled,
+select:disabled {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .error-message,
+    .success-message {
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+    
+    .validation-summary {
+        padding: 16px;
+    }
+    
+    .validation-summary-title {
+        font-size: 15px;
+    }
+    
+    .is-valid,
+    .is-invalid {
+        background-size: 18px !important;
+        padding-right: 44px !important;
+    }
+}
+
+/* Premium tooltip for validation */
+.validation-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.validation-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20px;
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+}
+
+.form-group:hover .validation-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-4px);
+}
