@@ -12,7 +12,7 @@ require_once '../config/database.php';
 // ============================================
 // CONFIGURATION - UPDATE WITH YOUR EMAIL
 // ============================================
-$ADMIN_EMAIL = 'your-email@example.com'; // CHANGE THIS TO YOUR EMAIL
+$ADMIN_EMAIL = 'tukamuhebwanewton@gmail.com'; // Admin email to receive messages
 $SITE_NAME = 'Runyakitara Hub';
 $SITE_URL = 'http://localhost:8000'; // Update with your domain
 
@@ -54,12 +54,52 @@ try {
     
     closeDBConnection($db);
     
-    ob_end_clean();
-    
+    // ============================================
+    // PHPMailer Implementation
+    // ============================================
+    require_once '../libs/PHPMailer/src/Exception.php';
+    require_once '../libs/PHPMailer/src/PHPMailer.php';
+    require_once '../libs/PHPMailer/src/SMTP.php';
+
     if ($dbSaved) {
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mailSent = false;
+        $mailError = '';
+        
+        try {
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $ADMIN_EMAIL;
+            $mail->Password   = 'pjmkupxqstwocxwj';
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = 587;
+
+            $mail->setFrom($ADMIN_EMAIL, $SITE_NAME);
+            $mail->addAddress($ADMIN_EMAIL);
+            $mail->addReplyTo($email, $name);
+
+            $mail->isHTML(false);
+            $mail->Subject = "New Contact Message: $subject";
+            $mail->Body    = "You have received a new message from the contact form.\n\n" .
+                             "Name: $name\n" .
+                             "Email: $email\n" .
+                             "Subject: $subject\n\n" .
+                             "Message:\n$message\n\n" .
+                             "---\nThis email was sent from the $SITE_NAME contact form.";
+
+            $mailSent = $mail->send();
+        } catch (\PHPMailer\PHPMailer\Exception $e) {
+            $mailError = $e->getMessage();
+            error_log("PHPMailer Error: " . $mailError);
+        }
+
+        ob_end_clean();
         echo json_encode([
-            'success' => true, 
-            'message' => 'Thank you for your message! We will get back to you within 24-48 hours.'
+            'success' => true,
+            'message' => 'Thank you for your message! We will get back to you within 24-48 hours.',
+            'mail_sent' => $mailSent,
+            'mail_error' => $mailError // remove this line in production
         ]);
     } else {
         echo json_encode([

@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $example = $_POST['example'] ?? '';
         $category = $_POST['category'] ?? '';
         
-        $stmt = $db->prepare("INSERT INTO dictionary (word, translation, pronunciation, example, category, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))");
+        $stmt = $db->prepare("INSERT INTO dictionary (word_runyakitara, word_english, pronunciation, example_sentence, category, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))");
         if ($stmt->execute([$word, $translation, $pronunciation, $example, $category])) {
             $message = 'Word added successfully!';
             $messageType = 'success';
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $example = $_POST['example'] ?? '';
         $category = $_POST['category'] ?? '';
         
-        $stmt = $db->prepare("UPDATE dictionary SET word=?, translation=?, pronunciation=?, example=?, category=? WHERE id=?");
+        $stmt = $db->prepare("UPDATE dictionary SET word_runyakitara=?, word_english=?, pronunciation=?, example_sentence=?, category=? WHERE id=?");
         if ($stmt->execute([$word, $translation, $pronunciation, $example, $category, $id])) {
             $message = 'Word updated successfully!';
             $messageType = 'success';
@@ -369,9 +369,9 @@ closeDBConnection($db);
                                 <?php foreach ($words as $word): ?>
                                     <tr>
                                         <td>
-                                            <strong><?php echo htmlspecialchars($word['word']); ?></strong>
+                                            <strong><?php echo htmlspecialchars($word['word_runyakitara']); ?></strong>
                                         </td>
-                                        <td><?php echo htmlspecialchars($word['translation']); ?></td>
+                                        <td><?php echo htmlspecialchars($word['word_english']); ?></td>
                                         <td>
                                             <?php if ($word['pronunciation']): ?>
                                                 <span class="pronunciation"><?php echo htmlspecialchars($word['pronunciation']); ?></span>
@@ -391,7 +391,7 @@ closeDBConnection($db);
                                                 <button class="btn-edit-modal" onclick='openEditModal(<?php echo json_encode($word); ?>)' title="Edit">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button class="btn-delete-modal" onclick="openDeleteModal(<?php echo $word['id']; ?>, '<?php echo htmlspecialchars($word['word'], ENT_QUOTES); ?>')" title="Delete">
+                                                <button class="btn-delete-modal" onclick="openDeleteModal(<?php echo $word['id']; ?>, '<?php echo htmlspecialchars($word['word_runyakitara'], ENT_QUOTES); ?>')" title="Delete">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -513,11 +513,11 @@ closeDBConnection($db);
             document.getElementById('submitBtnText').textContent = 'Update Word';
             document.getElementById('formAction').value = 'edit';
             document.getElementById('wordId').value = word.id;
-            document.getElementById('modalWord').value = word.word;
-            document.getElementById('modalTranslation').value = word.translation;
+            document.getElementById('modalWord').value = word.word_runyakitara;
+            document.getElementById('modalTranslation').value = word.word_english;
             document.getElementById('modalPronunciation').value = word.pronunciation || '';
             document.getElementById('modalCategory').value = word.category || '';
-            document.getElementById('modalExample').value = word.example || '';
+            document.getElementById('modalExample').value = word.example_sentence || '';
             document.getElementById('wordModal').classList.add('active');
         }
         
