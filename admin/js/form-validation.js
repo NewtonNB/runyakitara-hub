@@ -1,247 +1,130 @@
 /**
- * Custom Form Validation System
- * Provides real-time validation with custom styling
+ * Custom Form Validation for Modal Forms
  */
 
 class FormValidator {
     constructor(formElement) {
         this.form = formElement;
-        this.errors = {};
-        this.init();
-    }
-
-    init() {
-        // Add novalidate to prevent browser default validation
         this.form.setAttribute('novalidate', '');
-        
-        // Add real-time validation on input
-        const inputs = this.form.querySelectorAll('input, textarea, select');
-        inputs.forEach(input => {
-            input.addEventListener('blur', () => this.validateField(input));
-            input.addEventListener('input', () => {
-                if (input.classList.contains('is-invalid')) {
-                    this.validateField(input);
-                }
+        this._attachListeners();
+        this._attachSubmit();
+    }
+
+    _attachListeners() {
+        this.form.querySelectorAll('input, textarea, select').forEach(field => {
+            field.addEventListener('blur', () => this._validateField(field));
+            field.addEventListener('input', () => {
+                if (field.classList.contains('is-invalid')) this._validateField(field);
             });
+            field.addEventListener('change', () => this._validateField(field));
         });
+    }
 
-        // Validate on submit
-        this.form.addEventListener('submit', (e) => {
-            if (!this.validateForm()) {
+    _attachSubmit() {
+        this.form.addEventListener('submit', e => {
+            if (!this._validateAll()) {
                 e.preventDefault();
-                this.focusFirstError();
+                const first = this.form.querySelector('.is-invalid');
+                if (first) { first.focus(); first.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
             }
         });
     }
 
-    validateField(field) {
+    _validateField(field) {
+        // Skip hidden fields and action/id inputs
+        if (field.type === 'hidden' || field.type === 'file') return true;
+
         const value = field.value.trim();
-        const name = field.name;
-        let isValid = true;
-        let errorMessage = '';
+        let error = '';
 
-        // Remove previous error
-        this.clearFieldError(field);
-
-        // Required validation
         if (field.hasAttribute('required') && !value) {
-            isValid = false;
-            errorMessage = this.getFieldLabel(field) + ' is required';
+            error = `${this._label(field)} is required`;
+        } else if (field.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            error = 'Enter a valid email address';
+        } else if (field.hasAttribute('minlength') && value && value.length < +field.getAttribute('minlength')) {
+            error = `Must be at least ${field.getAttribute('minlength')} characters`;
+        } else if (field.hasAttribute('maxlength') && value && value.length > +field.getAttribute('maxlength')) {
+            error = `Must be at most ${field.getAttribute('maxlength')} characters`;
+        } else if (field.tagName === 'SELECT' && field.hasAttribute('required') && !value) {
+            error = `${this._label(field)} is required`;
         }
 
-        // Email validation
-        if (isValid && field.type === 'email' && value) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-                isValid = false;
-                errorMessage = 'Please enter a valid email address';
-            }
-        }
-
-        // URL validation
-        if (isValid && field.type === 'url' && value) {
-            try {
-                new URL(value);
-            } catch {
-                isValid = false;
-                errorMessage = 'Please enter a valid URL';
-            }
-        }
-
-        // Number validation
-        if (isValid && field.type === 'number' && value) {
-            const num = parseFloat(value);
-            if (isNaN(num)) {
-                isValid = false;
-                errorMessage = 'Please enter a valid number';
-            }
-            if (field.hasAttribute('min') && num < parseFloat(field.min)) {
-                isValid = false;
-                errorMessage = `Value must be at least ${field.min}`;
-            }
-            if (field.hasAttribute('max') && num > parseFloat(field.max)) {
-                isValid = false;
-                errorMessage = `Value must be at most ${field.max}`;
-            }
-        }
-
-        // Min length validation
-        if (isValid && field.hasAttribute('minlength') && value) {
-            const minLength = parseInt(field.getAttribute('minlength'));
-            if (value.length < minLength) {
-                isValid = false;
-                errorMessage = `Must be at least ${minLength} characters`;
-            }
-        }
-
-        // Max length validation
-        if (isValid && field.hasAttribute('maxlength') && value) {
-            const maxLength = parseInt(field.getAttribute('maxlength'));
-            if (value.length > maxLength) {
-                isValid = false;
-                errorMessage = `Must be at most ${maxLength} characters`;
-            }
-        }
-
-        // Pattern validation
-        if (isValid && field.hasAttribute('pattern') && value) {
-            const pattern = new RegExp(field.getAttribute('pattern'));
-            if (!pattern.test(value)) {
-                isValid = false;
-                errorMessage = field.getAttribute('data-pattern-message') || 'Invalid format';
-            }
-        }
-
-        // Custom validation
-        if (isValid && field.hasAttribute('data-validate')) {
-            const validationType = field.getAttribute('data-validate');
-            const customValidation = this.customValidations[validationType];
-            if (customValidation) {
-                const result = customValidation(value, field);
-                if (!result.valid) {
-                    isValid = false;
-                    errorMessage = result.message;
-                }
-            }
-        }
-
-        if (!isValid) {
-            this.showFieldError(field, errorMessage);
-            this.errors[name] = errorMessage;
+        if (error) {
+            this._showError(field, error);
+            return false;
         } else {
-            delete this.errors[name];
+            this._clearError(field);
+            return true;
         }
-
-        return isValid;
     }
 
-    validateForm() {
-        this.errors = {};
-        const inputs = this.form.querySelectorAll('input, textarea, select');
-        let isValid = true;
-
-        inputs.forEach(input => {
-            if (!this.validateField(input)) {
-                isValid = false;
-            }
+    _validateAll() {
+        let valid = true;
+        this.form.querySelectorAll('input, textarea, select').forEach(field => {
+            if (!this._validateField(field)) valid = false;
         });
-
-        return isValid;
+        return valid;
     }
 
-    showFieldError(field, message) {
+    _showError(field, message) {
         field.classList.add('is-invalid');
         field.classList.remove('is-valid');
-
-        // Create or update error message
-        let errorDiv = field.parentElement.querySelector('.error-message');
-        if (!errorDiv) {
-            errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            field.parentElement.appendChild(errorDiv);
+        let err = field.parentElement.querySelector('.error-message');
+        if (!err) {
+            err = document.createElement('div');
+            err.className = 'error-message';
+            field.parentElement.appendChild(err);
         }
-        errorDiv.textContent = message;
-
-        // Add shake animation
-        field.style.animation = 'shake 0.3s';
-        setTimeout(() => {
-            field.style.animation = '';
-        }, 300);
+        err.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i><span>${message}</span>`;
     }
 
-    clearFieldError(field) {
+    _clearError(field) {
         field.classList.remove('is-invalid');
-        field.classList.add('is-valid');
-        
-        const errorDiv = field.parentElement.querySelector('.error-message');
-        if (errorDiv) {
-            errorDiv.remove();
-        }
+        if (field.value.trim()) field.classList.add('is-valid');
+        const err = field.parentElement.querySelector('.error-message');
+        if (err) err.remove();
     }
 
-    focusFirstError() {
-        const firstInvalid = this.form.querySelector('.is-invalid');
-        if (firstInvalid) {
-            firstInvalid.focus();
-            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+    reset() {
+        this.form.querySelectorAll('input, textarea, select').forEach(field => {
+            field.classList.remove('is-invalid', 'is-valid');
+            const err = field.parentElement?.querySelector('.error-message');
+            if (err) err.remove();
+        });
     }
 
-    getFieldLabel(field) {
-        const label = this.form.querySelector(`label[for="${field.id}"]`);
-        if (label) {
-            return label.textContent.replace('*', '').trim();
-        }
-        return field.name.charAt(0).toUpperCase() + field.name.slice(1);
-    }
-
-    // Custom validation rules
-    customValidations = {
-        username: (value) => {
-            const regex = /^[a-zA-Z0-9_]{3,20}$/;
-            return {
-                valid: regex.test(value),
-                message: 'Username must be 3-20 characters (letters, numbers, underscore only)'
-            };
-        },
-        password: (value) => {
-            if (value.length < 6) {
-                return {
-                    valid: false,
-                    message: 'Password must be at least 6 characters'
-                };
-            }
-            return { valid: true };
-        },
-        phone: (value) => {
-            const regex = /^[\d\s\-\+\(\)]+$/;
-            return {
-                valid: regex.test(value),
-                message: 'Please enter a valid phone number'
-            };
-        },
-        noSpecialChars: (value) => {
-            const regex = /^[a-zA-Z0-9\s]+$/;
-            return {
-                valid: regex.test(value),
-                message: 'Special characters are not allowed'
-            };
-        }
-    };
-
-    // Add custom validation rule
-    addCustomValidation(name, validationFn) {
-        this.customValidations[name] = validationFn;
+    _label(field) {
+        const lbl = this.form.querySelector(`label[for="${field.id}"]`);
+        if (lbl) return lbl.textContent.replace('*', '').trim();
+        return field.name ? field.name.charAt(0).toUpperCase() + field.name.slice(1) : 'This field';
     }
 }
 
-// Auto-initialize forms with data-validate attribute
+// Registry so modal open functions can call validator.reset()
+window._validators = {};
+
 document.addEventListener('DOMContentLoaded', () => {
-    const forms = document.querySelectorAll('form[data-validate="true"]');
-    forms.forEach(form => {
-        new FormValidator(form);
+    document.querySelectorAll('form[data-validate="true"]').forEach(form => {
+        if (form.id) window._validators[form.id] = new FormValidator(form);
+        else new FormValidator(form);
     });
 });
 
-// Export for manual initialization
 window.FormValidator = FormValidator;
+
+/**
+ * Call this when opening a modal to reset its form's validation state.
+ * Usage: resetFormValidation('lessonForm');
+ */
+window.resetFormValidation = function(formId) {
+    const v = window._validators[formId];
+    if (v) { v.reset(); return; }
+    // Fallback: just strip classes/errors manually
+    const form = document.getElementById(formId);
+    if (!form) return;
+    form.querySelectorAll('input, textarea, select').forEach(f => {
+        f.classList.remove('is-invalid', 'is-valid');
+        const err = f.parentElement?.querySelector('.error-message');
+        if (err) err.remove();
+    });
+};

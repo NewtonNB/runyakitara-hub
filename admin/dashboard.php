@@ -8,450 +8,537 @@ if (!isset($_SESSION['user_id'])) {
 require_once '../config/database.php';
 $db = getDBConnection();
 
-// Get statistics
+// Get statistics with growth calculations
 $stats = [];
-$tables = ['lessons', 'dictionary', 'proverbs', 'articles', 'contact_messages'];
+$growth = [];
+$tables = ['lessons', 'dictionary', 'proverbs', 'articles', 'contact_messages', 'users'];
+
 foreach ($tables as $table) {
-    $result = $db->query("SELECT COUNT(*) as count FROM $table");
-    $row = $result->fetch(PDO::FETCH_ASSOC);
-    $stats[$table] = $row['count'];
+    try {
+        $result = $db->query("SELECT COUNT(*) as count FROM $table");
+        $row = $result->fetch(PDO::FETCH_ASSOC);
+        $stats[$table] = $row['count'];
+
+        $lastMonth = $db->query("SELECT COUNT(*) as count FROM $table WHERE created_at < date('now', '-30 days')");
+        $lastMonthRow = $lastMonth->fetch(PDO::FETCH_ASSOC);
+        $lastMonthCount = $lastMonthRow['count'];
+
+        if ($lastMonthCount > 0) {
+            $growth[$table] = round((($stats[$table] - $lastMonthCount) / $lastMonthCount) * 100, 1);
+        } else {
+            $growth[$table] = $stats[$table] > 0 ? 100 : 0;
+        }
+    } catch (Exception $e) {
+        $stats[$table] = 0;
+        $growth[$table] = 0;
+    }
 }
 
-// Get recent messages
-$rC);
+foreach (['grammar_topics' => 'grammar', 'translations' => 'translations', 'media' => 'media'] as $tbl => $key) {
+    try {
+        $row = $db->query("SELECT COUNT(*) as count FROM $tbl")->fetch(PDO::FETCH_ASSOC);
+        $stats[$key] = $row['count'];
+    } catch (Exception $e) { $stats[$key] = 0; }
+}
 
-// Get recent lesons
-$recen);
+try {
+    $row = $db->query("SELECT COUNT(*) as count FROM contact_messages WHERE status = 'new'")->fetch(PDO::FETCH_ASSOC);
+    $stats['new_messages'] = $row['count'];
+} catch (Exception $e) { $stats['new_messages'] = 0; }
 
-// Get total users
-$totalUsers = $db->query("SELECT COUNT(*) as count Ft'];
+// Notifications
+$notifications = [];
+$notificationCount = 0;
+try {
+    $stmt = $db->query("SELECT id, name, subject, created_at FROM contact_messages WHERE status = 'new' ORDER BY created_at DESC LIMIT 5");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $notifications[] = ['type'=>'message','icon'=>'envelope-fill','color'=>'info',
+            'title'=>'New message from '.$row['name'],'description'=>$row['subject'],
+            'time'=>$row['created_at'],'link'=>'messages-manage.php?id='.$row['id']];
+    }
+    $stmt = $db->query("SELECT title, created_at FROM lessons WHERE created_at > datetime('now', '-1 day') ORDER BY created_at DESC LIMIT 3");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $notifications[] = ['type'=>'lesson','icon'=>'book-fill','color'=>'primary',
+            'title'=>'New lesson added','description'=>$row['title'],
+            'time'=>$row['created_at'],'link'=>'lessons-manage.php'];
+    }
+    usort($notifications, fn($a,$b) => strtotime($b['time']) - strtotime($a['time']));
+    $notifications = array_slice($notifications, 0, 10);
+    $notificationCount = count($notifications);
+} catch (Exception $e) { $notifications = []; $notificationCount = 0; }
+
+// Recent activity
+$recentActivity = [];
+try {
+    $a = $db->query("SELECT 'lesson' as type, title as name, created_at FROM lessons ORDER BY created_at DESC LIMIT 3")->fetchAll(PDO::FETCH_ASSOC);
+    $b = $db->query("SELECT 'article' as type, title as name, created_at FROM articles ORDER BY created_at DESC LIMIT 3")->fetchAll(PDO::FETCH_ASSOC);
+    $c = $db->query("SELECT 'word' as type, word_runyakitara as name, created_at FROM dictionary ORDER BY created_at DESC LIMIT 2")->fetchAll(PDO::FETCH_ASSOC);
+    $d = $db->query("SELECT 'proverb' as type, substr(proverb, 1, 50) as name, created_at FROM proverbs ORDER BY created_at DESC LIMIT 2")->fetchAll(PDO::FETCH_ASSOC);
+    $recentActivity = array_merge($a, $b, $c, $d);
+    usort($recentActivity, fn($x,$y) => strtotime($y['created_at']) - strtotime($x['created_at']));
+    $recentActivity = array_slice($recentActivity, 0, 10);
+} catch (Exception $e) { $recentActivity = []; }
+
+// Recent messages
+$recentMessages = [];
+try {
+    $recentMessages = $db->query("SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT 5")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) { $recentMessages = []; }
 
 closeDBConnection($db);
 ?>
-<!DOCT
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Runyakitara Hub Admin</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.goog">
-    <link rel="preconnect" href="https://fonts.gstaigin>
-    <link href="https://fonts.googleapis.com/css2?f>
-    
-    <!-- Bootstraps -->
-    <link rel="s">
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.nett>
-    
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="styles
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body class="admin-body">
-    <div class="admin-layout">
-        <!-- Sidebar -->
-        <aside class="admin-sidebar">
-            <div class">
-                <div class="logo">
-                    <i class="bi bi-translate"></i>
-                    <span>Runyakitara Hub</span>
+<div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard.php" class="sidebar-logo">
+                <i class="bi bi-translate"></i>
+                <span>Runyakitara Hub</span>
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="dashboard.php" class="nav-item active"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Content</div>
+                <a href="lessons-manage.php" class="nav-item"><i class="bi bi-book"></i><span>Lessons</span></a>
+                <a href="dictionary-manage.php" class="nav-item"><i class="bi bi-journal-text"></i><span>Dictionary</span></a>
+                <a href="proverbs-manage.php" class="nav-item"><i class="bi bi-chat-quote"></i><span>Proverbs</span></a>
+                <a href="grammar-manage.php" class="nav-item"><i class="bi bi-pencil-square"></i><span>Grammar</span></a>
+                <a href="articles-manage.php" class="nav-item"><i class="bi bi-newspaper"></i><span>Articles</span></a>
+                <a href="media-manage.php" class="nav-item"><i class="bi bi-play-circle"></i><span>Media</span></a>
+                <a href="translations-manage.php" class="nav-item"><i class="bi bi-arrow-left-right"></i><span>Translations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Communication</div>
+                <a href="messages-manage.php" class="nav-item">
+                    <i class="bi bi-envelope"></i><span>Messages</span>
+                    <?php if ($stats['new_messages'] > 0): ?>
+                        <span class="nav-badge"><?php echo $stats['new_messages']; ?></span>
+                    <?php endif; ?>
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">System</div>
+                <a href="users-manage.php" class="nav-item"><i class="bi bi-people"></i><span>Users</span></a>
+                <?php if (isset($_SESSION['user_roles']) && in_array('super_admin', $_SESSION['user_roles'])): ?>
+                <a href="roles-manage.php" class="nav-item"><i class="bi bi-shield-check"></i><span>Roles & Permissions</span></a>
+                <?php endif; ?>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar"><i class="bi bi-person-circle"></i></div>
+                <div class="user-details">
+                    <div class="user-name"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin'); ?></div>
+                    <div class="user-role"><?php echo ucfirst($_SESSION['role'] ?? 'admin'); ?></div>
                 </div>
             </div>
-            
-            <nav class="admin-nav">
-                <a hre">
-                    <i class="bi bi-spe>
-                    <span>Dashboard</
-                </a>
-                <a hre
-                    <i class="bi bi-boo
-                    <span>Lessons</span>
-                </a>
-                <a hre>
-                  /i>
-            
-                </a>
-                <a href="proverbs.php"-item">
-                    <i class="bi bi-chat-quo>
-                    <span>Proverbs</span>
-                </a>
-                <a href="articles.php" class="nav-item">
-                    <i class="bi bi-newspaper"></i>
-                    <sspan>
-                </a>
-               tem">
-          "></i>
-       /span>
-       ): ?>
-</html>
+            <a href="logout.php" class="nav-item" style="margin-top:10px;">
+                <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+            </a>
+        </div>
+    </aside>
 
+    <!-- Main Content -->
+    <div class="admin-content">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-left">
+                <button class="mobile-toggle" id="mobileToggle"><i class="bi bi-list"></i></button>
+                <div>
+                    <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
+                    <div class="breadcrumb">
+                        <a href="dashboard.php">Home</a>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Dashboard</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-actions">
+                    <div class="notification-wrapper">
+                        <button class="header-action" id="notificationBtn">
+                            <i class="bi bi-bell"></i>
+                            <?php if ($notificationCount > 0): ?>
+                                <span class="notification-badge"><?php echo $notificationCount; ?></span>
+                            <?php endif; ?>
+                        </button>
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="notification-header">
+                                <h4>Notifications</h4>
+                                <span class="notification-count"><?php echo $notificationCount; ?> new</span>
+                            </div>
+                            <div class="notification-list">
+                                <?php if (!empty($notifications)): ?>
+                                    <?php foreach ($notifications as $notif): ?>
+                                        <a href="<?php echo $notif['link']; ?>" class="notification-item">
+                                            <div class="notification-icon <?php echo $notif['color']; ?>">
+                                                <i class="bi bi-<?php echo $notif['icon']; ?>"></i>
+                                            </div>
+                                            <div class="notification-content">
+                                                <div class="notification-title"><?php echo htmlspecialchars($notif['title']); ?></div>
+                                                <div class="notification-description"><?php echo htmlspecialchars($notif['description']); ?></div>
+                                                <div class="notification-time">
+                                                    <?php
+                                                    $t = strtotime($notif['time']); $diff = time() - $t;
+                                                    if ($diff < 60) echo 'Just now';
+                                                    elseif ($diff < 3600) echo floor($diff/60).' min ago';
+                                                    elseif ($diff < 86400) echo floor($diff/3600).' hrs ago';
+                                                    else echo date('M d, Y', $t);
+                                                    ?>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="notification-empty">
+                                        <i class="bi bi-bell-slash"></i>
+                                        <p>No new notifications</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="notification-footer">
+                                <a href="messages-manage.php">View all notifications</a>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="../index.php" class="header-action" title="View Website"><i class="bi bi-eye"></i></a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Area -->
+        <main class="admin-main">
+
+            <!-- Quick Actions -->
+            <div class="quick-actions-section">
+                <h3><i class="bi bi-lightning-charge"></i> Quick Actions</h3>
+                <div class="quick-actions-grid">
+                    <button class="quick-action-btn" onclick="location.href='lessons-manage.php?action=add'">
+                        <i class="bi bi-plus-circle"></i><span>Add Lesson</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="location.href='dictionary-manage.php?action=add'">
+                        <i class="bi bi-plus-circle"></i><span>Add Word</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="location.href='proverbs-manage.php?action=add'">
+                        <i class="bi bi-plus-circle"></i><span>Add Proverb</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="location.href='articles-manage.php?action=add'">
+                        <i class="bi bi-plus-circle"></i><span>Add Article</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="location.href='messages-manage.php'">
+                        <i class="bi bi-envelope"></i><span>View Messages</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <a href="lessons-manage.php" class="stat-card" style="text-decoration:none;color:inherit;">
+                    <div class="stat-header">
+                        <div class="stat-icon lessons"><i class="bi bi-book-fill"></i></div>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-label">Total Lessons</div>
+                        <div class="stat-number"><?php echo $stats['lessons']; ?></div>
+                    </div>
+                    <div class="stat-footer">
+                        <div class="stat-change <?php echo $growth['lessons'] >= 0 ? 'positive' : 'negative'; ?>">
+                            <i class="bi bi-arrow-<?php echo $growth['lessons'] >= 0 ? 'up' : 'down'; ?>"></i>
+                            <span><?php echo abs($growth['lessons']); ?>%</span>
+                        </div>
+                        <span style="color:var(--text-light);">this month</span>
+                    </div>
+                </a>
+
+                <a href="dictionary-manage.php" class="stat-card" style="text-decoration:none;color:inherit;">
+                    <div class="stat-header">
+                        <div class="stat-icon dictionary"><i class="bi bi-journal-text"></i></div>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-label">Dictionary Words</div>
+                        <div class="stat-number"><?php echo $stats['dictionary']; ?></div>
+                    </div>
+                    <div class="stat-footer">
+                        <div class="stat-change <?php echo $growth['dictionary'] >= 0 ? 'positive' : 'negative'; ?>">
+                            <i class="bi bi-arrow-<?php echo $growth['dictionary'] >= 0 ? 'up' : 'down'; ?>"></i>
+                            <span><?php echo abs($growth['dictionary']); ?>%</span>
+                        </div>
+                        <span style="color:var(--text-light);">this month</span>
+                    </div>
+                </a>
+
+                <a href="proverbs-manage.php" class="stat-card" style="text-decoration:none;color:inherit;">
+                    <div class="stat-header">
+                        <div class="stat-icon proverbs"><i class="bi bi-chat-quote-fill"></i></div>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-label">Proverbs</div>
+                        <div class="stat-number"><?php echo $stats['proverbs']; ?></div>
+                    </div>
+                    <div class="stat-footer">
+                        <div class="stat-change <?php echo $growth['proverbs'] >= 0 ? 'positive' : 'negative'; ?>">
+                            <i class="bi bi-arrow-<?php echo $growth['proverbs'] >= 0 ? 'up' : 'down'; ?>"></i>
+                            <span><?php echo abs($growth['proverbs']); ?>%</span>
+                        </div>
+                        <span style="color:var(--text-light);">this month</span>
+                    </div>
+                </a>
+
+                <a href="articles-manage.php" class="stat-card" style="text-decoration:none;color:inherit;">
+                    <div class="stat-header">
+                        <div class="stat-icon articles"><i class="bi bi-newspaper"></i></div>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-label">Articles</div>
+                        <div class="stat-number"><?php echo $stats['articles']; ?></div>
+                    </div>
+                    <div class="stat-footer">
+                        <div class="stat-change <?php echo $growth['articles'] >= 0 ? 'positive' : 'negative'; ?>">
+                            <i class="bi bi-arrow-<?php echo $growth['articles'] >= 0 ? 'up' : 'down'; ?>"></i>
+                            <span><?php echo abs($growth['articles']); ?>%</span>
+                        </div>
+                        <span style="color:var(--text-light);">this month</span>
+                    </div>
+                </a>
+
+                <a href="messages-manage.php" class="stat-card" style="text-decoration:none;color:inherit;">
+                    <div class="stat-header">
+                        <div class="stat-icon messages"><i class="bi bi-envelope-fill"></i></div>
+                        <?php if ($stats['new_messages'] > 0): ?>
+                            <span class="stat-badge"><?php echo $stats['new_messages']; ?> New</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-label">Messages</div>
+                        <div class="stat-number"><?php echo $stats['contact_messages']; ?></div>
+                    </div>
+                    <div class="stat-footer">
+                        <div class="stat-change <?php echo $growth['contact_messages'] >= 0 ? 'positive' : 'negative'; ?>">
+                            <i class="bi bi-arrow-<?php echo $growth['contact_messages'] >= 0 ? 'up' : 'down'; ?>"></i>
+                            <span><?php echo abs($growth['contact_messages']); ?>%</span>
+                        </div>
+                        <span style="color:var(--text-light);">this month</span>
+                    </div>
+                </a>
+
+                <a href="users-manage.php" class="stat-card" style="text-decoration:none;color:inherit;">
+                    <div class="stat-header">
+                        <div class="stat-icon users"><i class="bi bi-people-fill"></i></div>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-label">Admin Users</div>
+                        <div class="stat-number"><?php echo $stats['users']; ?></div>
+                    </div>
+                    <div class="stat-footer">
+                        <div class="stat-change positive">
+                            <i class="bi bi-check-circle"></i><span>Active</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3><i class="bi bi-bar-chart"></i> Content Overview</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="contentChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3><i class="bi bi-pie-chart"></i> Distribution</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Row -->
+            <div class="activity-row">
+                <div class="activity-card">
+                    <div class="card-header">
+                        <h3><i class="bi bi-clock-history"></i> Recent Activity</h3>
+                        <select class="activity-filter" onchange="filterActivity(this.value)">
+                            <option value="all">All Activity</option>
+                            <option value="lesson">Lessons</option>
+                            <option value="article">Articles</option>
+                            <option value="word">Dictionary</option>
+                            <option value="proverb">Proverbs</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($recentActivity)): ?>
+                            <div class="activity-list">
+                                <?php foreach ($recentActivity as $activity): ?>
+                                    <div class="activity-item" data-type="<?php echo $activity['type']; ?>">
+                                        <div class="activity-icon <?php echo $activity['type']; ?>">
+                                            <?php $icons = ['lesson'=>'book-fill','article'=>'newspaper','word'=>'journal-text','proverb'=>'chat-quote-fill']; ?>
+                                            <i class="bi bi-<?php echo $icons[$activity['type']] ?? 'file'; ?>"></i>
+                                        </div>
+                                        <div class="activity-content">
+                                            <div class="activity-title"><?php echo htmlspecialchars($activity['name']); ?></div>
+                                            <div class="activity-meta">
+                                                <?php echo ucfirst($activity['type']); ?> •
+                                                <?php
+                                                $t = strtotime($activity['created_at']); $diff = time() - $t;
+                                                if ($diff < 3600) echo floor($diff/60).' minutes ago';
+                                                elseif ($diff < 86400) echo floor($diff/3600).' hours ago';
+                                                else echo date('M d, Y', $t);
+                                                ?>
+                                            </div>
+                                        </div>
+                                        <span class="activity-badge">New</span>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <i class="bi bi-clock-history"></i>
+                                <p>No recent activity</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="activity-card">
+                    <div class="card-header">
+                        <h3><i class="bi bi-envelope"></i> Recent Messages</h3>
+                        <a href="messages-manage.php" class="view-all">View All <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($recentMessages)): ?>
+                            <div class="activity-list">
+                                <?php foreach ($recentMessages as $msg): ?>
+                                    <div class="activity-item" onclick="location.href='messages-manage.php?id=<?php echo $msg['id']; ?>'" style="cursor:pointer;">
+                                        <div class="activity-icon message">
+                                            <i class="bi bi-envelope<?php echo $msg['status'] === 'new' ? '-fill' : ''; ?>"></i>
+                                        </div>
+                                        <div class="activity-content">
+                                            <div class="activity-title"><?php echo htmlspecialchars($msg['subject']); ?></div>
+                                            <div class="activity-meta">
+                                                From: <?php echo htmlspecialchars($msg['name']); ?> •
+                                                <?php
+                                                $t = strtotime($msg['created_at']); $diff = time() - $t;
+                                                if ($diff < 3600) echo floor($diff/60).' min ago';
+                                                elseif ($diff < 86400) echo floor($diff/3600).' hrs ago';
+                                                else echo date('M d', $t);
+                                                ?>
+                                            </div>
+                                        </div>
+                                        <span class="activity-status <?php echo $msg['status']; ?>"><?php echo ucfirst($msg['status']); ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>No messages yet</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script>
+    document.getElementById('mobileToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('active');
+    });
+
+    const notificationBtn = document.getElementById('notificationBtn');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    notificationBtn?.addEventListener('click', function(e) {
+        e.stopPropagation();
+        notificationDropdown.classList.toggle('active');
+    });
+    document.addEventListener('click', function(e) {
+        if (!notificationDropdown.contains(e.target) && e.target !== notificationBtn) {
+            notificationDropdown.classList.remove('active');
+        }
+    });
+    notificationDropdown?.addEventListener('click', e => e.stopPropagation());
+
+    function filterActivity(type) {
+        document.querySelectorAll('.activity-item[data-type]').forEach(item => {
+            item.style.display = (type === 'all' || item.dataset.type === type) ? 'flex' : 'none';
+        });
+    }
+
+    // Content Overview Chart
+    const contentCtx = document.getElementById('contentChart');
+    if (contentCtx) {
+        new Chart(contentCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Lessons', 'Dictionary', 'Proverbs', 'Articles', 'Messages'],
+                datasets: [{
+                    label: 'Count',
+                    data: [<?php echo $stats['lessons']; ?>, <?php echo $stats['dictionary']; ?>, <?php echo $stats['proverbs']; ?>, <?php echo $stats['articles']; ?>, <?php echo $stats['contact_messages']; ?>],
+                    backgroundColor: ['rgba(102,126,234,0.8)','rgba(240,147,251,0.8)','rgba(79,172,254,0.8)','rgba(67,233,123,0.8)','rgba(250,112,154,0.8)'],
+                    borderColor: ['rgb(102,126,234)','rgb(240,147,251)','rgb(79,172,254)','rgb(67,233,123)','rgb(250,112,154)'],
+                    borderWidth: 2, borderRadius: 8, borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+            }
+        });
+    }
+
+    // Distribution Chart
+    const distData = [<?php echo $stats['lessons']; ?>, <?php echo $stats['dictionary']; ?>, <?php echo $stats['proverbs']; ?>, <?php echo $stats['articles']; ?>];
+    const distTotal = distData.reduce((a, b) => a + b, 0);
+    const distCtx = document.getElementById('distributionChart');
+    if (distCtx) {
+        if (distTotal === 0) {
+            distCtx.parentElement.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;"><i class="bi bi-pie-chart" style="font-size:36px;display:block;margin-bottom:8px;"></i>No content yet</div>';
+        } else {
+            new Chart(distCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Lessons', 'Dictionary', 'Proverbs', 'Articles'],
+                    datasets: [{
+                        data: distData,
+                        backgroundColor: ['rgba(102,126,234,0.85)','rgba(240,147,251,0.85)','rgba(79,172,254,0.85)','rgba(67,233,123,0.85)'],
+                        borderColor: '#fff', borderWidth: 3, hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 14, usePointStyle: true } } },
+                    cutout: '60%'
+                }
+            });
+        }
+    }
+</script>
 </body>
-ript>
-    </sc      });   }
-               }
-              }
-            '
-      n: 'bottompositio                        : {
-   legend           
-      ugins: {pl      
-          se,atio: falAspectRinnta         mai       true,
- nsive:    respo            : {
- options           
- },              }]
-           
-  : 3idth     borderW             
-  : '#fff',orCol      border        
-         ],          
-        0.8)'5, 222, 179,(24gba         'r              )',
-  0.8, 116,a(212, 165        'rgb               .8)',
- , 133, 63, 0a(205    'rgb                  0.8)',
-   19,9, 69,    'rgba(13              [
-       r: kgroundColo      bac            ],
-                     ; ?>
- ['articles']$statsecho ?php        <        ,
-         erbs']; ?>prov $stats[' <?php echo                   ]; ?>,
-    ionary''dictcho $stats[   <?php e           
-          s']; ?>,ssons['leho $stat ec <?php                      
- : [    data           [{
-      tasets:          da'],
-      iclesArtroverbs', 'ary', 'PDiction, ' ['Lessons's: label              {
-     data:    nut',
-     gh  type: 'dou         tx, {
- tCew Chart(dis
-        n);ontext('2d't').getCibutionChar('distrIdtByemennt.getEltx = docume distC   constt
-      Charontributi// Dis        
-        
-        });        }
-   
- }                       }
-           }
-                        sion: 0
-  preci                        
-    icks: {   t               
-      ue,: trtZero      beginA         
-            y: {        {
-           scales:             ,
-        }                }
-              false
-isplay:  d                     egend: {
-         l        : {
-        plugins             false,
-Ratio: intainAspect  ma             e,
- ive: tru respons              
- options: {              },
-
-                }]       dius: 8
-     borderRa                : 2,
-  idth    borderW                      ],
-              )'
- 45, 1, 82,rgba(160           '          , 1)',
-   79, 1(245, 222gba 'r              
-         6, 1)',5, 1116(212, rgba         '               , 63, 1)',
-(205, 133  'rgba                      , 19, 1)',
-, 69rgba(139   '                   lor: [
-  borderCo                        ],
-          )'
-      .85, 00, 82, 4    'rgba(16                
-    .8)',222, 179, 0245,      'rgba(                  
-  0.8)',165, 116,212,     'rgba(                 0.8)',
-   , 133, 63,  'rgba(205                      8)',
-  19, 0. 69,9,ba(13       'rg                olor: [
- kgroundC  bac                
-            ],    ?>
-       ssages'];['contact_me $statsp echo?ph   <                  >,
-   ']; ?rticlesstats['aecho $?php  <                    ; ?>,
-   ['proverbs']tatsho $s <?php ec                 
-      ry']; ?>,tiona'dics[o $stat <?php ech                       >,
-ns']; ?lesso $stats['chohp e         <?p             ta: [
-    da              ount',
-     'Content C label:                 
-  ts: [{se   data           sages'],
-  'Mesticles', bs', 'Ar 'ProverDictionary',', 'essonslabels: ['L            ata: {
-            d    r',
- 'ba type:        
-   ntCtx, {contehart(    new C');
-    ntext('2dart').getCotChontenmentById('c.getEledocumenttentCtx =   const con
-      hartrview Cnt Ove  // Conte   
-          });
-     ive');
-    le('act.togg.classListsidebar')tor('.admin-erySelec document.qu          
- tion() {', func('clicktListenerEven?.addggle')idebarToId('stByement.getEl  documenggle
-       sidebar tole // Mobi       ipt>
-
-    <scr</div>
-       
-  </main>   
-     </div>       v>
-       </di            </a>
-              
-       te</span>bsin>View We    <spa               
-     "></i>"bi bi-eye=  <i class                      -btn">
-k-action"quiclass=l" cndex.htmhref="../i <a                 a>
-         </       an>
-       sp Messages</an>View       <sp                 e"></i>
-envelops="bi bi-as     <i cl                
-   ">tion-btnck-ac class="quis.php"f="message  <a hre            
-      /a>    <        >
-        </spanrticlespan>Add A           <     i>
-        e"></us-circl bi-pli class="bi        <               tn">
- n-bctioss="quick-aclad" ction=adphp?as.ef="article    <a hr             
-   </a>                
-    overb</span>an>Add Prsp  <                      i>
-circle"></ bi-plus-ass="bi     <i cl                  n-btn">
- -actiockuiass="q" clp?action=addoverbs.phhref="pr    <a                  </a>
-             
-      </span>Add Wordspan>   <                    /i>
- ircle"><-c"bi bi-plus= class     <i                   
-">n-action-bt="quickd" class=adionp?actnary.ph="dictioref h        <a            
-/a>         <
-           >span</Add Lessonspan>           <             e"></i>
-cls-ciri-plu"bi bass=    <i cl                   >
- ction-btn""quick-add" class==ationp?acessons.ph href="l  <a                  ">
--gridk-actionsass="quicdiv cl          <
-      h3> Actions</i> Quickcharge"></-lightning-i biclass="b<i <h3>            
-    fade-up">s="" data-aoons-sectiontik-ac"quic<div class=        
-    Actions --><!-- Quick                    
-  div>
-       </        div>
-        </
-        div>   </                 ?>
- <?php endif;                 
-       div>    </                   ; ?>
-     endforeach    <?php                        /div>
-           <                      ton>
-    butl"></i></pencii-="bi bassclcon"><i lass="btn-in c<butto                                  /div>
-           <                       v>
-    </di                                      ?>
-  ); at'])n['created_time($lessostrto Y',  d,te('Mphp echo da    <?                                       > • 
- ); ?el']ev($lesson['lho ucfirst?php ec <el:Lev                                        a">
-    ivity-met"actclass=<div                                    /div>
-     tle']); ?><tisson['rs($lespecialchatmlho h?php ecty-title"><ctivilass="a   <div c                                 t">
-    -conten"activity=iv class <d                               
-        </div>                            >
-    ll"></iok-fibi bi-boss="i cla  <                                 
-     con">ity-is="activlasv c        <di                           tem">
- "activity-idiv class=        <                       ): ?>
- sson $lesons asntLes$recep foreach (     <?ph                   ">
-        ity-listivass="act  <div cl                      e: ?>
-     <?php els                       </div>
-                       
-     >sons yet</p  <p>No les                            
-  -book"></i>lass="bi bi c        <i                
-        ty-state">ass="emp     <div cl                       >
-: ?ns))tLessompty($recen?php if (e      <               ody">
-   d-bs="car <div clas                  iv>
-      </d         
-      /i></a>right"><rrow-i-a"bi bi class= <ll">View Allss="view-a.php" claessons <a href="l                    s</h3>
-   ecent Lesson"></i> R"bi bi-book<i class=3>       <h              ader">
-   s="card-he clas<div               
-     ay="200">os-del-a" dataupaos="fade-data-ard" "activity-c<div class=            
-                    div>
-  </          
-    iv>  </d            ?>
-       endif; <?php                 
-       /div>    <                      h; ?>
-  reacp endfoph     <?                     >
-            </div                        
-        </div>                         ?>
-      ']);atussg['stirst($mcho ucfp e  <?ph                                   ">
-   ?>status']; [' $msgs <?php echoatuity-sts="activiv clas          <d                      div>
-    </                                 >
-     </div                                      ?>
- d_at']));sg['create$mrtotime(, Y', st('M dho date?php ec        <                              • 
-      ); ?> g['name']s($msharlspecialcho htmom: <?php ec         Fr                            
-       vity-meta">ass="acti<div cl                                    </div>
-    bject']); ?>($msg['sulcharshtmlspecia><?php echo e"itl"activity-tass=    <div cl                                    ontent">
--ctivityss="ac cla   <div                            >
-     div        </                           </i>
- pe">nvelobi bi-eclass="<i                                        >
- on"ity-icss="activ <div cla                                  em">
- ivity-itctlass="a   <div c                        ?>
-      as $msg):entMessages ch ($rechp forea  <?p                             list">
- vity-"actilass=     <div c                  ?>
-     php else:         <?                
- </div>                     
-      s yet</p>>No message       <p                      </i>
-   ox">bi bi-inbass=" cl   <i                      ">
-       atey-stlass="empt c  <div                          s)): ?>
-centMessagey($ref (empt     <?php i            ">
-       "card-bodyv class=       <di  
-           </div>                  /i></a>
-  "><arrow-right="bi bi-ss cla<iw All ie-all">Viewass="vhp" cl"messages.p href=        <a           
-     essages</h3>Recent Mi> </ory">ock-hist bi-clclass="bih3><i         <                -header">
-rdlass="ca<div c                  
-  ade-up">ta-aos="f-card" datyctivi="a <div class               ty-row">
-viss="acti   <div cla
-         Activity -->nt ece-- R          <!    
-  >
-          </div      >
-    </div       
-         div>   </             
-    "></canvas>artnChibutio"distrcanvas id=          <             d-body">
- arass="c<div cl                 div>
-        </           iv>
-         </d                 
-  ></button>e-dots"></i"bi bi-thre class=con"><iss="btn-i<button cla                     
-       -actions">lass="cardv c<di              
-          h3>ution</Distribtent ></i> Conpie-chart"i bi-"b><i class=     <h3           
-        ader">"card-heiv class=    <d           
-     y="200">os-delaa-aade-up" dat"fa-aos=t-card" datss="chariv cla        <d             
-          div>
-     </            >
-     </div               canvas>
-tChart"></tenons id="c      <canva        
-          dy">s="card-bo  <div clas               >
-     </div       
-                </div>           
-        </button>dots"></i>hree--tbiass="bi cln"><i ss="btn-icotton cla  <bu                     ">
-     ns"card-actio <div class=                      ew</h3>
- Overvi/i> Content "><hartbi-bar-ci ass="b cl     <h3><i                  ader">
- ="card-heass<div cl                 
-   ade-up">ta-aos="frt-card" dalass="cha     <div c         w">
-  arts-ro="ch <div class
-            Row -->- Charts       <!-  
-     
-          div>         </v>
-           </di>
-        /div   <                
-       </div>             ive
-     "></i> Acteld-checki-shilass="bi b       <i c                    
- e">stat-chang class="  <div                 iv>
-     /drs<Admin Use">abelt-ls="sta   <div clas                 </div>
-    talUsers; ?>cho $tor"><?php enumbet-tass="s    <div cla                
-    tails">t-de"stadiv class=         <          v>
-     </di              l"></i>
-  ple-fil"bi bi-peolass=i c       <      
-           ers">tat-icon usclass="s<div             
-        0">y="50-delata-aos da"s="fade-upao" data-stat-cardiv class="     <d               
-           </div>
-                 </div>
-                v>
-    di  </                   all
-    View ></i> bi-dash"="bi    <i class                     e">
-   "stat-chang class=iv   <d                   
-  v>ges</dissat-label">Me class="sta   <div                   ?></div>
-  ]; s'tact_messageats['conp echo $st<?phnumber">"stat-<div class=                      s">
-  at-detailss="st <div cla                   </div>
-                    
-i>"></filli-envelope-="bi bclass       <i                 
- ges"> messastat-iconclass="v       <di           >
-   elay="400"" data-aos-d"fade-upaos=a--card" dat"stat<div class=     
-                     >
-         </div        
-     iv>    </d                  </div>
-                   
-    this monthi> 15%rrow-up"></ss="bi bi-a   <i cla                        ive">
- hange positass="stat-ccl <div                        
-les</div>bel">Artictat-la"sdiv class=         <                ?></div>
-rticles']; $stats['a"><?php echomberss="stat-nu<div cla                      ">
-  at-detailsss="st   <div cla              div>
-         </            i>
-  wspaper"></-nes="bi bi  <i clas                      icles">
-con arttat-iv class="s         <di          "300">
- a-aos-delay=" dat"fade-upta-aos=ard" da="stat-c  <div class            
-              iv>
-             </d     
-  /div>         <        iv>
-    </d                  
-     h montthis</i> 5% rrow-up">="bi bi-aclass  <i                        ">
-   sitive poat-changes="stiv clas          <d           
-   div>bs</">Proverbels="stat-la<div clas                      iv>
-  s']; ?></d'proverbs[echo $stat"><?php "stat-numberlass=  <div c            
-          ls">t-detai"staass=cl  <div          
-             </div>          
-      ill"></i>t-quote-f bi-chass="bi cla   <i                 
-    ">verbsprocon t-i="stassla c       <div            200">
- -delay=" data-aos-up"os="fade data-aat-card" class="st<div                    
- 
-           v> </di             iv>
-  </d                    
-div>    </                onth
-     this m> 8%row-up"></i"bi bi-ari class=        <                    ">
- positivechange"stat-<div class=                       
- ds</div>nary Worio>Dictel""stat-lablass= civ <d                    iv>
-   ; ?></dnary']dictiotats['echo $sr"><?php beum"stat-nclass=       <div               >
-   tails"stat-de class="       <div           </div>
-                   </i>
-   xt">journal-tei bi-lass="b    <i c                 ">
-   ctionaryn diat-icoclass="st    <div            
-     >0"="10delaydata-aos-" e-up"faddata-aos=-card" "statss=<div cla                  
-                  </div>
-            iv>
-    </d               div>
-    </                    his month
- > 12% tup"></irrow-"bi bi-aass=       <i cl                  
-   sitive">t-change poass="sta <div cl                  
-     ns</div>sootal Lest-label">Tta class="s     <div                 ?></div>
-  sons']; tats['les $shor"><?php ecat-numbe class="st <div                  >
-     "etailsat-dstv class="      <di                </div>
-           >
-       fill"></iook-"bi bi-b class=    <i                  ns">
-  t-icon lesso"stadiv class=   <                 >
-="fade-up"ata-aosat-card" dv class="stdi   <             d">
-"stats-griiv class=      <d>
-      --Stats Grid   <!-- 
-            
-          div>        </    >
-      </div  n>
-        /butto       <      ord
-       "></i> Add Wirclebi-plus-cs="bi   <i clas               ">
-       d'ction=ad.php?ationaryn.href='dicocationclick="ly" oondartn-sec"btn bton class=       <but            utton>
-     </b             son
-    Lese"></i> Addrclplus-cii-ss="bi b     <i cla            
-       =add'">hp?actionf='lessons.pation.hre"lock=clicary" ontn btn-prim"btton class=bu <                  s">
- tionac"welcome-=lass    <div c            v>
-    </di          day.</p>
-   Hub toaraunyakitwith your Rning ppeat's ha<p>Here's wh             
-       2>?>! 👋</h); name']ON['userSESSIlchars($_lspeciaecho htm, <?php me backh2>Welco  <                  ontent">
-"welcome-class=v cdi       <    ">
-     section"welcome-class=       <div      >
- Section --lcome <!-- We                   
-ader>
-    </he            
-      </div>        a>
-      </           
-      View Site                      ></i>
- "eyes="bi bi-i clas         <               te">
-view-sin-s="btl" clasx.htmf="../inde   <a hre              v>
-           </di            "></i>
-i bi-gears="bclas        <i          >
-       item"s="header-asdiv cl   <             </div>
-                >
-        </spanbadge">3otification-ss="nn cla  <spa                     "></i>
- -bells="bi bi<i clas                      -item">
-  headerlass="v c       <di         
-    t">"header-righclass=div         <           </div>
-    >
-         hboard</h1>Das         <h1           >
-   </button           
-      "></i>isti-lbi b"<i class=                
-        arToggle">" id="sidebeggl-tobilelass="mo   <button c      
-           ">-leftaderss="heiv cla     <d         der">
-  "admin-heaclass=ader        <he
-     Bar -->   <!-- Top    >
-      ntent""admin-co= classain      <m-->
-  ntent in Co-- Ma
-        <!        side>
-    </aiv>
-          </d    </div>
-                  iv>
-     </d           iv>
-    le']); ?></dESSION['roucfirst($_Sphp echo er-role"><?"usv class=    <di          
-          div> ?></ame']);['usernSSIONrs($_SEalchamlspeciecho ht><?php ser-name"ass="u<div cl              
-          tails">r-de"useclass=v          <di       iv>
-            </d         ></i>
-   ircle" bi-person-c="biclass         <i             atar">
-   r-av="useiv class     <d        ">
-       er-profileuss=" clas      <div
-          r-footer">bas="sideclasiv   <d     
-             v>
-    na</      >
-      </a       >
-         ut</span>Logo    <span                ></i>
--right"ox-arrow"bi bi-b <i class=              >
-     "tem logoutass="nav-i.php" cl"logout<a href=                   </a>
-           if; ?>
-  php end          <?      n>
-    pa ?></ses'];act_messagcontho $stats['><?php ecge"="badsspan cla          <s          
+</html>

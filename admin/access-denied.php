@@ -155,7 +155,7 @@
         </p>
         
         <div class="actions">
-            <a href="dashboard-new.php" class="btn btn-primary">
+            <a href="dashboard.php" class="btn btn-primary">
                 <i class="bi bi-house-door"></i>
                 Go to Dashboard
             </a>

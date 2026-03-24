@@ -1,0 +1,379 @@
+/* ========================================
+   LESSON DETAIL PAGE
+   ======================================== */
+
+/* Hero */
+.lesson-hero {
+    padding: 130px 0 56px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.lesson-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 15% 60%, rgba(255,255,255,0.07) 0%, transparent 55%),
+        radial-gradient(circle at 85% 20%, rgba(255,255,255,0.07) 0%, transparent 55%);
+    pointer-events: none;
+}
+
+.lesson-hero-inner {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+}
+
+.lesson-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255,255,255,0.8);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-bottom: 20px;
+    transition: color 0.2s ease, gap 0.2s ease;
+}
+
+.lesson-back-link:hover {
+    color: white;
+    gap: 11px;
+}
+
+.lesson-hero-badges {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.lesson-number-badge {
+    background: rgba(255,255,255,0.18);
+    color: white;
+    padding: 5px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* override pages.css level badges for white bg context */
+.lesson-hero-badges .level-badge {
+    background: rgba(255,255,255,0.18) !important;
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.lesson-hero-inner h1 {
+    font-size: 42px;
+    font-weight: 800;
+    color: white;
+    line-height: 1.25;
+    margin-bottom: 14px;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.15);
+}
+
+.lesson-hero-desc {
+    font-size: 17px;
+    color: rgba(255,255,255,0.88);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    max-width: 700px;
+}
+
+.lesson-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.lesson-hero-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.88);
+    font-weight: 500;
+}
+
+/* ----------------------------------------
+   Page body layout
+   ---------------------------------------- */
+.lesson-page-body {
+    padding: 56px 0 80px;
+    background: #f1f5f9;
+}
+
+.lesson-page-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 32px;
+    align-items: start;
+}
+
+/* ----------------------------------------
+   Main content card
+   ---------------------------------------- */
+.lesson-content-card {
+    background: white;
+    border-radius: 20px;
+    padding: 44px 48px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+
+.lesson-text {
+    font-size: 16px;
+    color: #334155;
+    line-height: 1.9;
+    min-height: 80px;
+}
+
+.lesson-text br + br {
+    display: block;
+    content: '';
+    margin-top: 12px;
+}
+
+/* ----------------------------------------
+   Prev / Next nav
+   ---------------------------------------- */
+.lesson-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 44px;
+    padding-top: 28px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.lesson-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    min-width: 0;
+}
+
+.lesson-nav-btn:hover {
+    border-color: #667eea;
+    background: rgba(102,126,234,0.04);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(102,126,234,0.12);
+}
+
+.lesson-nav-next {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.lesson-nav-btn > i {
+    font-size: 20px;
+    color: #667eea;
+    flex-shrink: 0;
+}
+
+.lesson-nav-btn > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.lesson-nav-btn span {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.lesson-nav-btn strong {
+    font-size: 13px;
+    color: #1e293b;
+    font-weight: 600;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Back button */
+.lesson-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+    padding: 11px 26px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(102,126,234,0.35);
+}
+
+.lesson-all-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(102,126,234,0.45);
+    color: white;
+}
+
+/* ----------------------------------------
+   Sidebar
+   ---------------------------------------- */
+.lesson-sidebar {
+    position: sticky;
+    top: 88px;
+}
+
+.lesson-sidebar-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    overflow: hidden;
+}
+
+.lesson-sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 22px 16px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.lesson-sidebar-header i {
+    font-size: 18px;
+    color: #667eea;
+}
+
+.lesson-sidebar-header h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.lesson-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 520px;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+.lesson-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    text-decoration: none;
+    transition: background 0.18s ease;
+    border-left: 3px solid transparent;
+}
+
+.lesson-list-item:hover {
+    background: #f8fafc;
+}
+
+.lesson-list-item.active {
+    background: rgba(102,126,234,0.07);
+    border-left-color: #667eea;
+}
+
+.lesson-list-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    flex-shrink: 0;
+}
+
+.lesson-list-item.active .lesson-list-num {
+    background: #667eea;
+    color: white;
+}
+
+.lesson-list-title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.lesson-list-item.active .lesson-list-title {
+    color: #667eea;
+}
+
+.lesson-list-level {
+    font-size: 10px !important;
+    padding: 2px 8px !important;
+    flex-shrink: 0;
+}
+
+/* ----------------------------------------
+   Responsive
+   ---------------------------------------- */
+@media (max-width: 1024px) {
+    .lesson-page-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lesson-sidebar {
+        position: static;
+        order: -1; /* sidebar above content on mobile */
+    }
+
+    .lesson-list {
+        max-height: 260px;
+    }
+}
+
+@media (max-width: 768px) {
+    .lesson-hero {
+        padding: 110px 0 44px;
+    }
+
+    .lesson-hero-inner h1 {
+        font-size: 28px;
+    }
+
+    .lesson-content-card {
+        padding: 28px 22px;
+    }
+
+    .lesson-nav {
+        grid-template-columns: 1fr;
+    }
+
+    .lesson-nav-next {
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .lesson-hero-meta {
+        gap: 12px;
+    }
+}

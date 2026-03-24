@@ -1,6 +1,6 @@
 <aside class="admin-sidebar" id="sidebar">
     <div class="sidebar-header">
-        <a href="dashboard-new.php" class="sidebar-logo">
+        <a href="dashboard.php" class="sidebar-logo">
             <i class="bi bi-translate"></i>
             <span>Runyakitara Hub</span>
         </a>
@@ -9,7 +9,7 @@
     <nav class="sidebar-nav">
         <div class="nav-section">
             <div class="nav-section-title">Main</div>
-            <a href="dashboard-new.php" class="nav-item <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard-new.php' ? 'active' : ''; ?>">
+            <a href="dashboard.php" class="nav-item <?php echo basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : ''; ?>">
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
             </a>

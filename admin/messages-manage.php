@@ -72,308 +72,52 @@ closeDBConnection($db);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/dashboard.css">
-    
+    <link rel="stylesheet" href="css/forms.css">
     <style>
-        .messages-grid {
-            display: grid;
-            gap: 20px;
-        }
-        
+        .messages-grid { display: grid; gap: 16px; }
         .message-card {
             background: white;
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            transition: var(--transition);
-            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+            border: 1px solid rgba(226,232,240,0.8);
             border-left: 4px solid transparent;
-        }
-        
-        .message-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .message-card.new {
-            border-left-color: var(--info);
-            background: linear-gradient(to right, rgba(59, 130, 246, 0.05), white);
-        }
-        
-        .message-card.pending {
-            border-left-color: var(--warning);
-        }
-        
-        .message-card.completed {
-            border-left-color: var(--success);
-            opacity: 0.8;
-        }
-        
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
-        }
-        
-        .message-sender {
-            flex: 1;
-        }
-        
-        .sender-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 4px;
-        }
-        
-        .sender-email {
-            font-size: 14px;
-            color: var(--text-light);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .message-status {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: capitalize;
-        }
-        
-        .status-new {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--info);
-        }
-        
-        .status-pending {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-        }
-        
-        .status-completed {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-        
-        .message-subject {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 12px;
-        }
-        
-        .message-preview {
-            font-size: 14px;
-            color: var(--text);
-            line-height: 1.6;
-            margin-bottom: 16px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
-        .message-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
-        }
-        
-        .message-date {
-            font-size: 13px;
-            color: var(--text-light);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .message-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            border: none;
+            transition: all 0.2s ease;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            font-size: 16px;
         }
-        
-        .btn-view {
-            background: rgba(102, 126, 234, 0.1);
-            color: var(--primary);
-        }
-        
-        .btn-view:hover {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-delete {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-        
-        .btn-delete:hover {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            max-width: 700px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        
-        .modal-header {
-            padding: 30px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        
-        .modal-header h2 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 8px;
-        }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: var(--text-light);
-            cursor: pointer;
-            transition: var(--transition);
-            padding: 0;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-        }
-        
-        .modal-close:hover {
-            background: var(--light);
-            color: var(--text);
-        }
-        
-        .modal-body {
-            padding: 30px;
-        }
-        
-        .message-detail {
-            margin-bottom: 24px;
-        }
-        
-        .detail-label {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-light);
-            margin-bottom: 8px;
-        }
-        
-        .detail-value {
-            font-size: 15px;
-            color: var(--text);
-            line-height: 1.6;
-        }
-        
-        .modal-footer {
-            padding: 20px 30px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 12px;
-        }
-        
-        .filter-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .filter-tab {
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: none;
-            background: var(--light);
-            color: var(--text);
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 14px;
-        }
-        
-        .filter-tab.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-        }
-        
-        .filter-tab:hover {
-            transform: translateY(-2px);
-        }
-        
-        .alert {
-            padding: 16px 20px;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-        }
-        
-        .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-        
-        .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
+        .message-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .message-card.new     { border-left-color: var(--info); background: linear-gradient(to right, rgba(59,130,246,0.04), white); }
+        .message-card.pending { border-left-color: var(--warning); }
+        .message-card.completed { border-left-color: var(--success); opacity: 0.85; }
+        .message-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+        .message-sender { flex: 1; }
+        .sender-name { font-size: 17px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+        .sender-email { font-size: 13px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+        .message-status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: capitalize; }
+        .status-new       { background: rgba(59,130,246,0.1); color: var(--info); }
+        .status-pending   { background: rgba(245,158,11,0.1); color: #d97706; }
+        .status-completed { background: rgba(16,185,129,0.1); color: var(--success); }
+        .message-subject { font-size: 15px; font-weight: 600; color: var(--dark); margin-bottom: 10px; }
+        .message-preview { font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .message-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid var(--border); }
+        .message-date { font-size: 13px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+        .message-actions { display: flex; gap: 8px; }
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; background: white; padding: 16px 20px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04); border: 1px solid rgba(226,232,240,0.8); flex-wrap: wrap; }
+        .filter-tab { padding: 9px 18px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--light); color: var(--text); font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 13px; font-family: inherit; }
+        .filter-tab.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-color: transparent; }
+        .filter-tab:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 20px; max-width: 680px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+        .modal-header { padding: 28px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+        .modal-header h2 { font-size: 22px; font-weight: 700; color: var(--dark); margin: 0; }
+        .modal-close { background: var(--light); border: none; font-size: 20px; color: var(--text-light); cursor: pointer; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s; }
+        .modal-close:hover { background: var(--border); color: var(--text); }
+        .modal-body { padding: 28px 30px; }
+        .message-detail { margin-bottom: 20px; }
+        .detail-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); margin-bottom: 6px; }
+        .detail-value { font-size: 15px; color: var(--text); line-height: 1.6; }
+        .modal-footer { padding: 20px 30px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
     </style>
 </head>
 <body class="admin-body">

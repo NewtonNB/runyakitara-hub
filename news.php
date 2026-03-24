@@ -46,32 +46,52 @@ closeDBConnection($db);
                     <p>Articles will be published soon!</p>
                 </div>
             <?php else: ?>
+                <div class="articles-toolbar" data-aos="fade-up">
+                    <p class="articles-count"><span><?php echo count($articles); ?></span> articles published</p>
+                </div>
                 <div class="articles-grid">
-                    <?php foreach ($articles as $index => $article): ?>
-                        <article class="article-card" data-aos="fade-up" data-aos-delay="<?php echo $index * 100; ?>">
-                            <div class="article-header">
-                                <?php if (!empty($article['category'])): ?>
-                                    <span class="category-badge category-<?php echo strtolower($article['category']); ?>">
-                                        <?php echo ucfirst($article['category']); ?>
+                    <?php foreach ($articles as $index => $article):
+                        $content = $article['excerpt'] ?? $article['content'] ?? '';
+                        $wordCount = str_word_count(strip_tags($content));
+                        $readTime = max(1, ceil($wordCount / 200));
+                    ?>
+                        <article class="article-card" data-aos="fade-up" data-aos-delay="<?php echo ($index % 6) * 80; ?>">
+                            <div class="article-card-body">
+                                <div class="article-header">
+                                    <?php if (!empty($article['category'])): ?>
+                                        <span class="category-badge category-<?php echo strtolower(htmlspecialchars($article['category'])); ?>">
+                                            <?php echo htmlspecialchars($article['category']); ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span></span>
+                                    <?php endif; ?>
+                                    <span class="article-date">
+                                        <i class="bi bi-calendar3"></i>
+                                        <?php echo date('M d, Y', strtotime($article['created_at'])); ?>
                                     </span>
-                                <?php endif; ?>
-                                <span class="article-date">
-                                    <i class="bi bi-calendar"></i>
-                                    <?php echo date('M d, Y', strtotime($article['created_at'])); ?>
-                                </span>
-                            </div>
-                            <h3><?php echo htmlspecialchars($article['title']); ?></h3>
-                            <?php if (!empty($article['author'])): ?>
-                                <div class="article-author">
-                                    <i class="bi bi-person"></i>
-                                    By <?php echo htmlspecialchars($article['author']); ?>
                                 </div>
-                            <?php endif; ?>
-                            <div class="article-content">
-                                <?php 
-                                $content = $article['excerpt'] ?? $article['content'];
-                                echo nl2br(htmlspecialchars(substr($content, 0, 200))) . '...'; 
-                                ?>
+
+                                <h3><?php echo htmlspecialchars($article['title']); ?></h3>
+
+                                <?php if (!empty($article['author'])): ?>
+                                    <div class="article-author">
+                                        <i class="bi bi-person-circle"></i>
+                                        By <?php echo htmlspecialchars($article['author']); ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <p class="article-excerpt">
+                                    <?php echo htmlspecialchars(substr(strip_tags($content), 0, 180)); ?>...
+                                </p>
+                            </div>
+
+                            <div class="article-card-footer">
+                                <a href="article.php?id=<?php echo $article['id']; ?>" class="article-read-more">
+                                    Read More <i class="bi bi-arrow-right"></i>
+                                </a>
+                                <span class="article-reading-time">
+                                    <i class="bi bi-clock"></i> <?php echo $readTime; ?> min read
+                                </span>
                             </div>
                         </article>
                     <?php endforeach; ?>
@@ -80,6 +100,8 @@ closeDBConnection($db);
         </div>
     </section>
     
+    <?php include 'includes/footer.php'; ?>
+
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
     <script>

@@ -70,7 +70,7 @@ try {
                 <i class="bi bi-<?php 
                     $page = basename($_SERVER['PHP_SELF']);
                     echo match($page) {
-                        'dashboard-new.php' => 'speedometer2',
+                        'dashboard.php' => 'speedometer2',
                         'lessons-manage.php' => 'book',
                         'dictionary-manage.php' => 'journal-text',
                         'proverbs-manage.php' => 'chat-quote',
@@ -87,8 +87,7 @@ try {
                 ?>"></i>
                 <?php 
                     echo match($page) {
-                        'dashboard-new.php' => 'Dashboard',
-                        'lessons-manage.php' => 'Manage Lessons',
+                        'dashboard.php' => 'Dashboard',
                         'dictionary-manage.php' => 'Manage Dictionary',
                         'proverbs-manage.php' => 'Manage Proverbs',
                         'grammar-manage.php' => 'Manage Grammar',
@@ -104,11 +103,11 @@ try {
                 ?>
             </h1>
             <div class="breadcrumb">
-                <a href="dashboard-new.php">Home</a>
+                <a href="dashboard.php">Home</a>
                 <i class="bi bi-chevron-right"></i>
                 <span><?php 
                     echo match($page) {
-                        'dashboard-new.php' => 'Dashboard',
+                        'dashboard.php' => 'Dashboard',
                         'lessons-manage.php' => 'Lessons',
                         'dictionary-manage.php' => 'Dictionary',
                         'proverbs-manage.php' => 'Proverbs',

@@ -89,7 +89,7 @@ try {
     echo "<h2>✨ Update Complete!</h2>";
     echo "<div style='text-align: center; margin-top: 30px;'>";
     echo "<a href='admin/articles-manage.php' class='btn'>📰 Manage Articles</a>";
-    echo "<a href='admin/dashboard-new.php' class='btn'>📊 Dashboard</a>";
+    echo "<a href='admin/dashboard.php' class='btn'>📊 Dashboard</a>";
     echo "</div>";
     
     closeDBConnection($db);

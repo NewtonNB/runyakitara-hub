@@ -6,25 +6,26 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once '../config/database.php';
+require_once 'includes/soft-delete.php';
 $db = getDBConnection();
+ensureSoftDelete($db);
 
-// Handle actions
 $message = '';
 $messageType = '';
+$showTrash = isset($_GET['trash']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     if ($action === 'add') {
         $title = $_POST['title'] ?? '';
         $level = $_POST['level'] ?? '';
         $content = $_POST['content'] ?? '';
         $vocabulary = $_POST['vocabulary'] ?? '';
-        
-        // Auto-calculate lesson_order (get max + 1)
+
         $orderStmt = $db->query("SELECT COALESCE(MAX(lesson_order), 0) + 1 as next_order FROM lessons");
         $nextOrder = $orderStmt->fetch(PDO::FETCH_ASSOC)['next_order'];
-        
+
         $stmt = $db->prepare("INSERT INTO lessons (title, level, content, vocabulary, lesson_order, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))");
         if ($stmt->execute([$title, $level, $content, $vocabulary, $nextOrder])) {
             $message = 'Lesson added successfully!';
@@ -39,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $level = $_POST['level'] ?? '';
         $content = $_POST['content'] ?? '';
         $vocabulary = $_POST['vocabulary'] ?? '';
-        
+
         $stmt = $db->prepare("UPDATE lessons SET title=?, level=?, content=?, vocabulary=? WHERE id=?");
         if ($stmt->execute([$title, $level, $content, $vocabulary, $id])) {
             $message = 'Lesson updated successfully!';
@@ -50,34 +51,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'delete') {
         $id = $_POST['id'] ?? '';
-        $stmt = $db->prepare("DELETE FROM lessons WHERE id=?");
-        if ($stmt->execute([$id])) {
-            $message = 'Lesson deleted successfully!';
+        if (softDelete($db, 'lessons', $id)) {
+            $message = 'Lesson moved to trash.';
             $messageType = 'success';
-        } else {
-            $message = 'Error deleting lesson.';
-            $messageType = 'error';
+        }
+    } elseif ($action === 'restore') {
+        $id = $_POST['id'] ?? '';
+        if (restoreRecord($db, 'lessons', $id)) {
+            $message = 'Lesson restored.';
+            $messageType = 'success';
+        }
+    } elseif ($action === 'hard_delete') {
+        $id = $_POST['id'] ?? '';
+        if (hardDelete($db, 'lessons', $id)) {
+            $message = 'Lesson permanently deleted.';
+            $messageType = 'success';
         }
     }
 }
 
-// Get all lessons
 $lessons = [];
 try {
-    $stmt = $db->query("SELECT * FROM lessons ORDER BY created_at DESC");
-    $lessons = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    $lessons = [];
-}
+    if ($showTrash) {
+        $lessons = $db->query("SELECT * FROM lessons WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $lessons = $db->query("SELECT * FROM lessons WHERE deleted_at IS NULL ORDER BY lesson_order ASC, created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (Exception $e) { $lessons = []; }
 
-// Get lesson for editing
-$editLesson = null;
-if (isset($_GET['edit'])) {
-    $editId = $_GET['edit'];
-    $stmt = $db->prepare("SELECT * FROM lessons WHERE id=?");
-    $stmt->execute([$editId]);
-    $editLesson = $stmt->fetch(PDO::FETCH_ASSOC);
-}
+$trashCount = 0;
+try { $trashCount = $db->query("SELECT COUNT(*) FROM lessons WHERE deleted_at IS NOT NULL")->fetchColumn(); } catch (Exception $e) {}
 
 closeDBConnection($db);
 ?>
@@ -87,354 +90,253 @@ closeDBConnection($db);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Lessons - Runyakitara Hub Admin</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/form-validation.css">
-    
-    <style>
-        .content-table {
-            width: 100%;
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .table-header {
-            padding: 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .table-header h2 {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        thead {
-            background: var(--light);
-        }
-        
-        th {
-            padding: 16px 24px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--text);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        td {
-            padding: 16px 24px;
-            border-top: 1px solid var(--border);
-            color: var(--text);
-        }
-        
-        tbody tr {
-            transition: var(--transition);
-        }
-        
-        tbody tr:hover {
-            background: var(--light);
-        }
-        
-        .level-badge {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .level-beginner {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-        
-        .level-intermediate {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-        }
-        
-        .level-advanced {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            font-size: 16px;
-        }
-        
-        .btn-edit {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--info);
-        }
-        
-        .btn-edit:hover {
-            background: var(--info);
-            color: white;
-        }
-        
-        .btn-delete {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-        
-        .btn-delete:hover {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .form-section {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .form-section h2 {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: var(--transition);
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .form-group textarea {
-            min-height: 150px;
-            resize: vertical;
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-        
-        .alert {
-            padding: 16px 20px;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-        }
-        
-        .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-        
-        .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-    </style>
+    <link rel="stylesheet" href="css/table-utils.css">
 </head>
 <body class="admin-body">
-    <div class="admin-layout">
-        <?php include 'includes/sidebar.php'; ?>
-        
-        <div class="admin-content">
-            <?php include 'includes/header.php'; ?>
-            
-            <main class="admin-main">
-                <?php if ($message): ?>
-                    <div class="alert alert-<?php echo $messageType; ?>">
-                        <i class="bi bi-<?php echo $messageType === 'success' ? 'check-circle' : 'exclamation-circle'; ?>"></i>
-                        <?php echo $message; ?>
-                    </div>
-                <?php endif; ?>
-                
-                <!-- Add/Edit Form -->
-                <div class="form-section">
-                    <h2>
-                        <i class="bi bi-<?php echo $editLesson ? 'pencil' : 'plus-circle'; ?>"></i>
-                        <?php echo $editLesson ? 'Edit Lesson' : 'Add New Lesson'; ?>
-                    </h2>
-                    <form method="POST" data-validate="true">
-                        <input type="hidden" name="action" value="<?php echo $editLesson ? 'edit' : 'add'; ?>">
-                        <?php if ($editLesson): ?>
-                            <input type="hidden" name="id" value="<?php echo $editLesson['id']; ?>">
-                        <?php endif; ?>
-                        
-                        <div class="form-group">
-                            <label for="title" class="required">Lesson Title</label>
-                            <input type="text" id="title" name="title" required minlength="5" maxlength="200"
-                                   value="<?php echo $editLesson ? htmlspecialchars($editLesson['title']) : ''; ?>"
-                                   placeholder="e.g., Greetings and Introductions">
-                            <span class="field-hint">5-200 characters required</span>
+<div class="admin-layout">
+    <?php include 'includes/sidebar.php'; ?>
+    <div class="admin-content">
+        <?php include 'includes/header.php'; ?>
+        <main class="admin-main">
+
+            <?php if ($message): ?>
+                <div class="alert alert-<?php echo $messageType; ?>">
+                    <i class="bi bi-<?php echo $messageType === 'success' ? 'check-circle' : 'exclamation-circle'; ?>"></i>
+                    <?php echo $message; ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="content-table">
+                <div class="table-header">
+                    <h2><i class="bi bi-book"></i> <?php echo $showTrash ? 'Trash' : 'All Lessons'; ?> (<?php echo count($lessons); ?>)</h2>
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search lessons..." onkeyup="searchTable()">
+                            <i class="bi bi-search"></i>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="level" class="required">Level</label>
-                            <select id="level" name="level" required>
-                                <option value="">Select Level</option>
-                                <option value="beginner" <?php echo ($editLesson && $editLesson['level'] === 'beginner') ? 'selected' : ''; ?>>Beginner</option>
-                                <option value="intermediate" <?php echo ($editLesson && $editLesson['level'] === 'intermediate') ? 'selected' : ''; ?>>Intermediate</option>
-                                <option value="advanced" <?php echo ($editLesson && $editLesson['level'] === 'advanced') ? 'selected' : ''; ?>>Advanced</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="content" class="required">Lesson Content</label>
-                            <textarea id="content" name="content" required minlength="50"
-                                      placeholder="Enter the lesson content..."><?php echo $editLesson ? htmlspecialchars($editLesson['content']) : ''; ?></textarea>
-                            <span class="field-hint">Minimum 50 characters required</span>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="vocabulary">Vocabulary (Optional)</label>
-                            <textarea id="vocabulary" name="vocabulary" 
-                                      placeholder="Enter vocabulary words and meanings..."><?php echo $editLesson ? htmlspecialchars($editLesson['vocabulary']) : ''; ?></textarea>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-<?php echo $editLesson ? 'check' : 'plus'; ?>-circle"></i>
-                                <?php echo $editLesson ? 'Update Lesson' : 'Add Lesson'; ?>
-                            </button>
-                            <?php if ($editLesson): ?>
-                                <a href="lessons-manage.php" class="btn btn-secondary">
-                                    <i class="bi bi-x-circle"></i>
-                                    Cancel
+                        <?php if ($showTrash): ?>
+                            <a href="lessons-manage.php" class="btn-add" style="background:var(--text-light);"><i class="bi bi-arrow-left"></i> Back</a>
+                        <?php else: ?>
+                            <?php if ($trashCount > 0): ?>
+                                <a href="?trash=1" class="btn-add" style="background:rgba(239,68,68,0.1);color:var(--danger);box-shadow:none;">
+                                    <i class="bi bi-trash"></i> Trash (<?php echo $trashCount; ?>)
                                 </a>
                             <?php endif; ?>
-                        </div>
-                    </form>
-                </div>
-                
-                <!-- Lessons Table -->
-                <div class="content-table">
-                    <div class="table-header">
-                        <h2><i class="bi bi-book"></i> All Lessons (<?php echo count($lessons); ?>)</h2>
+                            <button class="btn-add" onclick="openAddModal()">
+                                <i class="bi bi-plus-circle"></i> Add Lesson
+                            </button>
+                        <?php endif; ?>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Level</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($lessons)): ?>
+                </div>
+                <table id="lessonsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Level</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($lessons)): ?>
+                            <tr><td colspan="5" class="empty-state"><i class="bi bi-inbox"></i><p><?php echo $showTrash ? 'Trash is empty.' : 'No lessons yet. Add your first one!'; ?></p></td></tr>
+                        <?php else: ?>
+                            <?php foreach ($lessons as $lesson): ?>
                                 <tr>
-                                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-light);">
-                                        <i class="bi bi-inbox" style="font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.5;"></i>
-                                        No lessons found. Add your first lesson above!
+                                    <td><?php echo $lesson['lesson_order']; ?></td>
+                                    <td><strong><?php echo htmlspecialchars($lesson['title']); ?></strong></td>
+                                    <td><span class="level-badge level-<?php echo $lesson['level']; ?>"><?php echo ucfirst($lesson['level']); ?></span></td>
+                                    <td><?php echo date('M d, Y', strtotime($lesson['created_at'])); ?></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <?php if ($showTrash): ?>
+                                                <form method="POST" style="display:inline;">
+                                                    <input type="hidden" name="action" value="restore">
+                                                    <input type="hidden" name="id" value="<?php echo $lesson['id']; ?>">
+                                                    <button type="submit" class="btn-icon btn-view" title="Restore"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                                </form>
+                                                <button class="btn-delete-modal" onclick="openHardDeleteModal(<?php echo $lesson['id']; ?>, '<?php echo htmlspecialchars($lesson['title'], ENT_QUOTES); ?>')" title="Delete Permanently"><i class="bi bi-trash"></i></button>
+                                            <?php else: ?>
+                                                <button class="btn-edit-modal" onclick='openEditModal(<?php echo json_encode($lesson); ?>)' title="Edit"><i class="bi bi-pencil"></i></button>
+                                                <button class="btn-delete-modal" onclick="openDeleteModal(<?php echo $lesson['id']; ?>, '<?php echo htmlspecialchars($lesson['title'], ENT_QUOTES); ?>')" title="Move to Trash"><i class="bi bi-trash"></i></button>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($lessons as $lesson): ?>
-                                    <tr>
-                                        <td>
-                                            <strong><?php echo htmlspecialchars($lesson['title']); ?></strong>
-                                        </td>
-                                        <td>
-                                            <span class="level-badge level-<?php echo $lesson['level']; ?>">
-                                                <?php echo ucfirst($lesson['level']); ?>
-                                            </span>
-                                        </td>
-                                        <td><?php echo date('M d, Y', strtotime($lesson['created_at'])); ?></td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <a href="?edit=<?php echo $lesson['id']; ?>" class="btn-icon btn-edit" title="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this lesson?');">
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="id" value="<?php echo $lesson['id']; ?>">
-                                                    <button type="submit" class="btn-icon btn-delete" title="Delete">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="lessonModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2><i class="bi bi-book"></i> <span id="modalTitle">Add Lesson</span></h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form method="POST" id="lessonForm" data-validate="true">
+            <div class="modal-body">
+                <input type="hidden" name="action" id="formAction" value="add">
+                <input type="hidden" name="id" id="lessonId">
+
+                <div class="form-group">
+                    <label class="required">Lesson Title</label>
+                    <input type="text" name="title" id="modalLessonTitle" required minlength="5" maxlength="200" placeholder="e.g., Greetings and Introductions">
                 </div>
-            </main>
+
+                <div class="form-group">
+                    <label class="required">Level</label>
+                    <select name="level" id="modalLevel" required>
+                        <option value="">Select Level</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="required">Lesson Content</label>
+                    <textarea name="content" id="modalContent" required minlength="50" placeholder="Enter the lesson content..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Vocabulary (Optional)</label>
+                    <textarea name="vocabulary" id="modalVocabulary" placeholder="Enter vocabulary words and meanings..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn modal-btn-secondary" onclick="closeModal()"><i class="bi bi-x-circle"></i> Cancel</button>
+                <button type="submit" class="modal-btn modal-btn-primary"><i class="bi bi-check-circle"></i> <span id="submitBtnText">Add Lesson</span></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-container modal-sm">
+        <div class="modal-body modal-confirm">
+            <div class="modal-confirm-icon warning"><i class="bi bi-trash"></i></div>
+            <h3>Move to Trash?</h3>
+            <p id="deleteMessage">This lesson will be moved to trash and can be restored later.</p>
+            <form method="POST" id="deleteForm">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" id="deleteId">
+                <div style="display:flex;gap:12px;justify-content:center;">
+                    <button type="button" class="modal-btn modal-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                    <button type="submit" class="modal-btn modal-btn-danger"><i class="bi bi-trash"></i> Move to Trash</button>
+                </div>
+            </form>
         </div>
     </div>
-    
-    <script>
-        document.getElementById('mobileToggle')?.addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('active');
-        });
-    </script>
-    <script src="js/form-validation.js"></script>
+</div>
+
+<!-- Hard Delete Modal -->
+<div class="modal-overlay" id="hardDeleteModal">
+    <div class="modal-container modal-sm">
+        <div class="modal-body modal-confirm">
+            <div class="modal-confirm-icon danger"><i class="bi bi-exclamation-triangle"></i></div>
+            <h3>Delete Permanently?</h3>
+            <p id="hardDeleteMessage">This cannot be undone.</p>
+            <form method="POST" id="hardDeleteForm">
+                <input type="hidden" name="action" value="hard_delete">
+                <input type="hidden" name="id" id="hardDeleteId">
+                <div style="display:flex;gap:12px;justify-content:center;">
+                    <button type="button" class="modal-btn modal-btn-secondary" onclick="closeHardDeleteModal()">Cancel</button>
+                    <button type="submit" class="modal-btn modal-btn-danger"><i class="bi bi-trash"></i> Delete Forever</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add Lesson';
+    document.getElementById('submitBtnText').textContent = 'Add Lesson';
+    document.getElementById('formAction').value = 'add';
+    document.getElementById('lessonForm').reset();
+    document.getElementById('lessonId').value = '';
+    resetFormValidation('lessonForm');
+    document.getElementById('lessonModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function openEditModal(lesson) {
+    document.getElementById('modalTitle').textContent = 'Edit Lesson';
+    document.getElementById('submitBtnText').textContent = 'Update Lesson';
+    document.getElementById('formAction').value = 'edit';
+    document.getElementById('lessonId').value = lesson.id;
+    document.getElementById('modalLessonTitle').value = lesson.title;
+    document.getElementById('modalLevel').value = lesson.level;
+    document.getElementById('modalContent').value = lesson.content;
+    document.getElementById('modalVocabulary').value = lesson.vocabulary || '';
+    resetFormValidation('lessonForm');
+    document.getElementById('lessonModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function closeModal() {
+    document.getElementById('lessonModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+function openDeleteModal(id, title) {
+    document.getElementById('deleteId').value = id;
+    document.getElementById('deleteMessage').innerHTML = `"<strong>${title}</strong>" will be moved to trash.`;
+    document.getElementById('deleteModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+function openHardDeleteModal(id, title) {
+    document.getElementById('hardDeleteId').value = id;
+    document.getElementById('hardDeleteMessage').innerHTML = `Permanently delete "<strong>${title}</strong>"? This cannot be undone.`;
+    document.getElementById('hardDeleteModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function closeHardDeleteModal() {
+    document.getElementById('hardDeleteModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+document.getElementById('lessonModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('deleteModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeDeleteModal(); });
+document.getElementById('hardDeleteModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeHardDeleteModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeDeleteModal(); closeHardDeleteModal(); } });
+document.getElementById('mobileToggle')?.addEventListener('click', () => document.getElementById('sidebar').classList.toggle('active'));
+
+function searchTable() {
+    const filter = document.getElementById('searchInput').value.toUpperCase();
+    document.querySelectorAll('#lessonsTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toUpperCase().includes(filter) ? '' : 'none';
+    });
+}
+</script>
+<script src="js/form-validation.js"></script>
+<script src="js/table-utils.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    TableUtils.init({ tableId: 'lessonsTable', rowsPerPage: 10, exportName: 'Lessons' });
+});
+</script>
 </body>
 </html>

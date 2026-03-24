@@ -48,8 +48,11 @@ closeDBConnection($db);
                 </div>
             <?php else: ?>
                 <div class="lessons-grid">
-                    <?php foreach ($lessons as $index => $lesson): ?>
-                        <div class="lesson-card" data-aos="fade-up" data-aos-delay="<?php echo $index * 100; ?>">
+                    <?php foreach ($lessons as $index => $lesson):
+                        $wordCount = str_word_count(strip_tags($lesson['content'] ?? ''));
+                        $readTime  = max(1, ceil($wordCount / 150));
+                    ?>
+                        <div class="lesson-card" data-aos="fade-up" data-aos-delay="<?php echo ($index % 6) * 80; ?>">
                             <div class="lesson-header">
                                 <div class="lesson-number">Lesson <?php echo $lesson['lesson_order']; ?></div>
                                 <span class="level-badge level-<?php echo strtolower($lesson['level']); ?>">
@@ -57,14 +60,14 @@ closeDBConnection($db);
                                 </span>
                             </div>
                             <h3><?php echo htmlspecialchars($lesson['title']); ?></h3>
-                            <p class="lesson-description"><?php echo htmlspecialchars($lesson['description'] ?? ''); ?></p>
-                            <div class="lesson-content">
-                                <?php echo nl2br(htmlspecialchars($lesson['content'])); ?>
-                            </div>
+                            <p class="lesson-description"><?php echo htmlspecialchars(substr($lesson['description'] ?? '', 0, 120)); ?></p>
                             <div class="lesson-footer">
                                 <span class="lesson-meta">
-                                    <i class="bi bi-clock"></i> 15-20 min
+                                    <i class="bi bi-clock"></i> <?php echo $readTime; ?> min
                                 </span>
+                                <a href="lesson.php?id=<?php echo $lesson['id']; ?>" class="lesson-start-btn">
+                                    Start Lesson <i class="bi bi-arrow-right"></i>
+                                </a>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -73,6 +76,8 @@ closeDBConnection($db);
         </div>
     </section>
     
+    <?php include 'includes/footer.php'; ?>
+
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
     <script>

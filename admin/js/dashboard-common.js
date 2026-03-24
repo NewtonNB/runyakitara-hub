@@ -91,41 +91,19 @@ document.querySelectorAll('form').forEach(form => {
 const scrollToTopBtn = document.createElement('button');
 scrollToTopBtn.className = 'scroll-to-top';
 scrollToTopBtn.innerHTML = '<i class="bi bi-arrow-up"></i>';
-scrollToTopBtn.style.cssText = `
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: white;
-    border: none;
-    cursor: pointer;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    z-index: 999;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-`;
-
+scrollToTopBtn.setAttribute('aria-label', 'Back to top');
 document.body.appendChild(scrollToTopBtn);
 
 window.addEventListener('scroll', function() {
     if (window.pageYOffset > 300) {
-        scrollToTopBtn.style.opacity = '1';
-        scrollToTopBtn.style.visibility = 'visible';
+        scrollToTopBtn.classList.add('visible');
     } else {
-        scrollToTopBtn.style.opacity = '0';
-        scrollToTopBtn.style.visibility = 'hidden';
+        scrollToTopBtn.classList.remove('visible');
     }
 });
 
 scrollToTopBtn.addEventListener('click', function() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 // Keyboard shortcuts

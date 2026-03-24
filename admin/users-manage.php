@@ -13,15 +13,14 @@ $messageType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     if ($action === 'add') {
         $username = $_POST['username'] ?? '';
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
         $role = $_POST['role'] ?? 'admin';
-        
+
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-        
         $stmt = $db->prepare("INSERT INTO users (username, email, password, role, created_at) VALUES (?, ?, ?, ?, datetime('now'))");
         if ($stmt->execute([$username, $email, $hashedPassword, $role])) {
             $message = 'User added successfully!';
@@ -33,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = $_POST['email'] ?? '';
         $role = $_POST['role'] ?? 'admin';
         $password = $_POST['password'] ?? '';
-        
+
         if (!empty($password)) {
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
             $stmt = $db->prepare("UPDATE users SET username=?, email=?, password=?, role=? WHERE id=?");
@@ -61,19 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $users = [];
 try {
-    $stmt = $db->query("SELECT * FROM users ORDER BY created_at DESC");
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    $users = [];
-}
-
-$editUser = null;
-if (isset($_GET['edit'])) {
-    $editId = $_GET['edit'];
-    $stmt = $db->prepare("SELECT * FROM users WHERE id=?");
-    $stmt->execute([$editId]);
-    $editUser = $stmt->fetch(PDO::FETCH_ASSOC);
-}
+    $users = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) { $users = []; }
 
 closeDBConnection($db);
 ?>
@@ -86,356 +74,200 @@ closeDBConnection($db);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/form-validation.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/modals.css">
     <style>
-        .content-table {
-            width: 100%;
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-        .table-header {
-            padding: 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .table-header h2 {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        thead {
-            background: var(--light);
-        }
-        th {
-            padding: 16px 24px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--text);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        td {
-            padding: 16px 24px;
-            border-top: 1px solid var(--border);
-            color: var(--text);
-        }
-        tbody tr {
-            transition: var(--transition);
-        }
-        tbody tr:hover {
-            background: var(--light);
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 16px;
-        }
-        .user-details {
-            flex: 1;
-        }
-        .user-name {
-            font-weight: 600;
-            color: var(--dark);
-        }
-        .user-email {
-            font-size: 13px;
-            color: var(--text-light);
-        }
-        .role-badge {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-        }
-        .role-admin {
-            background: rgba(102, 126, 234, 0.1);
-            color: var(--primary);
-        }
-        .role-editor {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        .btn-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            font-size: 16px;
-        }
-        .btn-edit {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--info);
-        }
-        .btn-edit:hover {
-            background: var(--info);
-            color: white;
-        }
-        .btn-delete {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-        .btn-delete:hover {
-            background: var(--danger);
-            color: white;
-        }
-        .form-section {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-        .form-section h2 {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: var(--transition);
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-        .alert {
-            padding: 16px 20px;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-        }
-        .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-        .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-        .form-hint {
-            font-size: 13px;
-            color: var(--text-light);
-            margin-top: 4px;
-        }
+        .user-info { display:flex; align-items:center; gap:12px; }
+        .user-avatar-sm { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--secondary)); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:16px; flex-shrink:0; }
+        .user-name { font-weight:600; color:var(--dark); }
+        .user-email { font-size:13px; color:var(--text-light); }
+        .role-badge { padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; display:inline-block; }
+        .role-admin  { background:rgba(102,126,234,0.1); color:var(--primary); }
+        .role-editor { background:rgba(16,185,129,0.1); color:var(--success); }
     </style>
 </head>
 <body class="admin-body">
-    <div class="admin-layout">
-        <?php include 'includes/sidebar.php'; ?>
-        
-        <div class="admin-content">
-            <?php include 'includes/header.php'; ?>
-            
-            <main class="admin-main">
-                <?php if ($message): ?>
-                    <div class="alert alert-<?php echo $messageType; ?>">
-                        <i class="bi bi-<?php echo $messageType === 'success' ? 'check-circle' : 'exclamation-circle'; ?>"></i>
-                        <?php echo $message; ?>
-                    </div>
-                <?php endif; ?>
-                
-                <div class="form-section">
-                    <h2>
-                        <i class="bi bi-<?php echo $editUser ? 'pencil' : 'plus-circle'; ?>"></i>
-                        <?php echo $editUser ? 'Edit User' : 'Add New User'; ?>
-                    </h2>
-                    <form method="POST" data-validate="true">
-                        <input type="hidden" name="action" value="<?php echo $editUser ? 'edit' : 'add'; ?>">
-                        <?php if ($editUser): ?>
-                            <input type="hidden" name="id" value="<?php echo $editUser['id']; ?>">
-                        <?php endif; ?>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="username">Username *</label>
-                                <input type="text" id="username" name="username" required 
-                                       value="<?php echo $editUser ? htmlspecialchars($editUser['username']) : ''; ?>"
-                                       placeholder="e.g., johndoe">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="email">Email *</label>
-                                <input type="email" id="email" name="email" required 
-                                       value="<?php echo $editUser ? htmlspecialchars($editUser['email']) : ''; ?>"
-                                       placeholder="e.g., john@example.com">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="password">Password <?php echo $editUser ? '' : '*'; ?></label>
-                                <input type="password" id="password" name="password" <?php echo $editUser ? '' : 'required'; ?>
-                                       placeholder="<?php echo $editUser ? 'Leave blank to keep current' : 'Enter password'; ?>">
-                                <?php if ($editUser): ?>
-                                    <div class="form-hint">Leave blank to keep current password</div>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="role">Role *</label>
-                                <select id="role" name="role" required>
-                                    <option value="admin" <?php echo ($editUser && $editUser['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
-                                    <option value="editor" <?php echo ($editUser && $editUser['role'] === 'editor') ? 'selected' : ''; ?>>Editor</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-<?php echo $editUser ? 'check' : 'plus'; ?>-circle"></i>
-                                <?php echo $editUser ? 'Update User' : 'Add User'; ?>
-                            </button>
-                            <?php if ($editUser): ?>
-                                <a href="users-manage.php" class="btn btn-secondary">
-                                    <i class="bi bi-x-circle"></i>
-                                    Cancel
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    </form>
+<div class="admin-layout">
+    <?php include 'includes/sidebar.php'; ?>
+    <div class="admin-content">
+        <?php include 'includes/header.php'; ?>
+        <main class="admin-main">
+
+            <?php if ($message): ?>
+                <div class="alert alert-<?php echo $messageType; ?>">
+                    <i class="bi bi-<?php echo $messageType === 'success' ? 'check-circle' : 'exclamation-circle'; ?>"></i>
+                    <?php echo $message; ?>
                 </div>
-                
-                <div class="content-table">
-                    <div class="table-header">
-                        <h2><i class="bi bi-people"></i> All Users (<?php echo count($users); ?>)</h2>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Role</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($users)): ?>
+            <?php endif; ?>
+
+            <div class="content-table">
+                <div class="table-header">
+                    <h2><i class="bi bi-people"></i> All Users (<?php echo count($users); ?>)</h2>
+                    <button class="btn-add" onclick="openAddModal()">
+                        <i class="bi bi-plus-circle"></i> Add User
+                    </button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($users)): ?>
+                            <tr><td colspan="4" class="empty-state"><i class="bi bi-people"></i><p>No users found.</p></td></tr>
+                        <?php else: ?>
+                            <?php foreach ($users as $user): ?>
                                 <tr>
-                                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-light);">
-                                        <i class="bi bi-people" style="font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.5;"></i>
-                                        No users found.
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar-sm"><?php echo strtoupper(substr($user['username'], 0, 1)); ?></div>
+                                            <div>
+                                                <div class="user-name"><?php echo htmlspecialchars($user['username']); ?></div>
+                                                <div class="user-email"><?php echo htmlspecialchars($user['email']); ?></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="role-badge role-<?php echo $user['role']; ?>"><?php echo ucfirst($user['role']); ?></span></td>
+                                    <td><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-edit-modal" onclick='openEditModal(<?php echo json_encode(['id'=>$user['id'],'username'=>$user['username'],'email'=>$user['email'],'role'=>$user['role']]); ?>)' title="Edit"><i class="bi bi-pencil"></i></button>
+                                            <?php if ($user['id'] != $_SESSION['user_id']): ?>
+                                                <button class="btn-delete-modal" onclick="openDeleteModal(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username'], ENT_QUOTES); ?>')" title="Delete"><i class="bi bi-trash"></i></button>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($users as $user): ?>
-                                    <tr>
-                                        <td>
-                                            <div class="user-info">
-                                                <div class="user-avatar">
-                                                    <?php echo strtoupper(substr($user['username'], 0, 1)); ?>
-                                                </div>
-                                                <div class="user-details">
-                                                    <div class="user-name"><?php echo htmlspecialchars($user['username']); ?></div>
-                                                    <div class="user-email"><?php echo htmlspecialchars($user['email']); ?></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="role-badge role-<?php echo $user['role']; ?>">
-                                                <?php echo ucfirst($user['role']); ?>
-                                            </span>
-                                        </td>
-                                        <td><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <a href="?edit=<?php echo $user['id']; ?>" class="btn-icon btn-edit" title="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this user?');">
-                                                        <input type="hidden" name="action" value="delete">
-                                                        <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
-                                                        <button type="submit" class="btn-icon btn-delete" title="Delete">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="userModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2><i class="bi bi-person-circle"></i> <span id="modalTitle">Add User</span></h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form method="POST" id="userForm">
+            <div class="modal-body">
+                <input type="hidden" name="action" id="formAction" value="add">
+                <input type="hidden" name="id" id="userId">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required">Username</label>
+                        <input type="text" name="username" id="modalUsername" required placeholder="e.g., johndoe">
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Email</label>
+                        <input type="email" name="email" id="modalEmail" required placeholder="e.g., john@example.com">
+                    </div>
                 </div>
-            </main>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label id="passwordLabel" class="required">Password</label>
+                        <input type="password" name="password" id="modalPassword" placeholder="Enter password" autocomplete="new-password">
+                        <span class="field-hint" id="passwordHint"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Role</label>
+                        <select name="role" id="modalRole" required>
+                            <option value="admin">Admin</option>
+                            <option value="editor">Editor</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn modal-btn-secondary" onclick="closeModal()"><i class="bi bi-x-circle"></i> Cancel</button>
+                <button type="submit" class="modal-btn modal-btn-primary"><i class="bi bi-check-circle"></i> <span id="submitBtnText">Add User</span></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-container modal-sm">
+        <div class="modal-body modal-confirm">
+            <div class="modal-confirm-icon danger"><i class="bi bi-exclamation-triangle"></i></div>
+            <h3>Delete User?</h3>
+            <p id="deleteMessage">Are you sure?</p>
+            <form method="POST" id="deleteForm">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" id="deleteId">
+                <div style="display:flex;gap:12px;justify-content:center;">
+                    <button type="button" class="modal-btn modal-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                    <button type="submit" class="modal-btn modal-btn-danger"><i class="bi bi-trash"></i> Delete</button>
+                </div>
+            </form>
         </div>
     </div>
-    
-    <script>
-        document.getElementById('mobileToggle')?.addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('active');
-        });
-    </script>
-    <script src="js/form-validation.js"></script>
+</div>
+
+<script>
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add User';
+    document.getElementById('submitBtnText').textContent = 'Add User';
+    document.getElementById('formAction').value = 'add';
+    document.getElementById('userForm').reset();
+    document.getElementById('userId').value = '';
+    document.getElementById('modalPassword').required = true;
+    document.getElementById('passwordLabel').classList.add('required');
+    document.getElementById('passwordHint').textContent = '';
+    document.getElementById('userModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function openEditModal(user) {
+    document.getElementById('modalTitle').textContent = 'Edit User';
+    document.getElementById('submitBtnText').textContent = 'Update User';
+    document.getElementById('formAction').value = 'edit';
+    document.getElementById('userId').value = user.id;
+    document.getElementById('modalUsername').value = user.username;
+    document.getElementById('modalEmail').value = user.email;
+    document.getElementById('modalRole').value = user.role;
+    document.getElementById('modalPassword').value = '';
+    document.getElementById('modalPassword').required = false;
+    document.getElementById('passwordLabel').classList.remove('required');
+    document.getElementById('passwordHint').textContent = 'Leave blank to keep current password';
+    document.getElementById('userModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function closeModal() {
+    document.getElementById('userModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+function openDeleteModal(id, username) {
+    document.getElementById('deleteId').value = id;
+    document.getElementById('deleteMessage').innerHTML = `Delete user "<strong>${username}</strong>"?`;
+    document.getElementById('deleteModal').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+document.getElementById('userModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('deleteModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeDeleteModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeDeleteModal(); } });
+document.getElementById('mobileToggle')?.addEventListener('click', () => document.getElementById('sidebar').classList.toggle('active'));
+</script>
 </body>
 </html>

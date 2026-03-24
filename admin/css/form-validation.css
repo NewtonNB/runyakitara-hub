@@ -64,12 +64,14 @@
 
 /* Error message with premium design */
 .error-message {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-top: 10px;
     font-size: 13px;
     color: #ef4444;
     font-weight: 500;
-    padding: 12px 16px;
+    padding: 10px 14px;
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%);
     border-left: 4px solid #ef4444;
     border-radius: 10px;
@@ -77,20 +79,21 @@
     box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
 }
 
-.error-message::before {
-    content: "⚠ ";
-    margin-right: 6px;
-    font-size: 16px;
+.error-message i {
+    font-size: 15px;
+    flex-shrink: 0;
 }
 
 /* Success message with premium design */
 .success-message {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-top: 10px;
     font-size: 13px;
     color: #10b981;
     font-weight: 500;
-    padding: 12px 16px;
+    padding: 10px 14px;
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.08) 100%);
     border-left: 4px solid #10b981;
     border-radius: 10px;
@@ -98,10 +101,9 @@
     box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
 }
 
-.success-message::before {
-    content: "✓ ";
-    margin-right: 6px;
-    font-size: 16px;
+.success-message i {
+    font-size: 15px;
+    flex-shrink: 0;
 }
 
 @keyframes slideDown {
@@ -229,9 +231,8 @@ select.is-invalid {
     gap: 10px;
 }
 
-.validation-summary-title::before {
-    content: "⚠";
-    font-size: 24px;
+.validation-summary-title i {
+    font-size: 20px;
 }
 
 .validation-summary-list {

@@ -41,9 +41,22 @@ closeDBConnection($db);
     <?php include 'includes/nav.php'; ?>
     
     <!-- Hero Section -->
-    <section class="hero-modern">
+    <?php
+    $heroBgExts = ['jpg','png','webp'];
+    $heroBg = null;
+    foreach ($heroBgExts as $ext) {
+        if (file_exists(__DIR__ . "/images/hero/hero-bg.$ext")) {
+            $heroBg = "/images/hero/hero-bg.$ext";
+            break;
+        }
+    }
+    ?>
+    <section class="hero-modern<?php echo $heroBg ? ' has-bg-image' : ''; ?>"<?php echo $heroBg ? " style=\"background-image:url('{$heroBg}');background-size:cover;background-position:center;\"" : ''; ?>>
         <div class="hero-background">
             <div class="hero-gradient"></div>
+            <?php if ($heroBg): ?>
+            <div class="hero-image-overlay"></div>
+            <?php endif; ?>
             <div class="hero-pattern"></div>
             <div class="floating-shapes">
                 <div class="shape shape-1"></div>
@@ -253,6 +266,48 @@ closeDBConnection($db);
         </div>
     </section>
     
+    <!-- Culture Section -->
+    <section class="culture-modern">
+        <div class="container">
+            <div class="culture-inner">
+                <?php
+                $cultureImgExts = ['jpg','png','webp'];
+                $cultureImg = null;
+                foreach ($cultureImgExts as $ext) {
+                    if (file_exists(__DIR__ . "/images/culture/culture.$ext")) {
+                        $cultureImg = "/images/culture/culture.$ext";
+                        break;
+                    }
+                }
+                ?>
+                <div class="culture-text" data-aos="fade-right">
+                    <span class="section-badge-modern">
+                        <i class="bi bi-heart-fill"></i>
+                        Our Heritage
+                    </span>
+                    <h2 class="section-title-modern">Rooted in Culture, Built for the Future</h2>
+                    <p>The Runyakitara languages are more than words — they carry centuries of wisdom, tradition, and identity. From the rolling hills of Kigezi to the plains of Ankole, these languages connect communities and preserve a rich cultural legacy.</p>
+                    <p>Our platform bridges the gap between tradition and technology, making it easy for anyone — at home or in the diaspora — to learn, speak, and celebrate these languages.</p>
+                    <a href="lessons.php" class="btn-hero btn-hero-primary" style="display:inline-flex;margin-top:20px;">
+                        <i class="bi bi-play-circle-fill"></i>
+                        <span>Start Your Journey</span>
+                    </a>
+                </div>
+                <div class="culture-image" data-aos="fade-left">
+                    <?php if ($cultureImg): ?>
+                    <img src="<?php echo $cultureImg; ?>" alt="Runyakitara culture">
+                    <?php else: ?>
+                    <div class="culture-image-placeholder">
+                        <i class="bi bi-globe-americas"></i>
+                        <span>Western Uganda</span>
+                        <small>Place culture.jpg in images/culture/</small>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Languages Section -->
     <section class="languages-modern">
         <div class="container">
@@ -268,45 +323,39 @@ closeDBConnection($db);
             </div>
             
             <div class="languages-grid-modern">
-                <div class="language-card-modern" data-aos="fade-up" data-aos-delay="0">
-                    <div class="language-number">01</div>
-                    <h3>Runyankore</h3>
-                    <p>Spoken primarily in Ankole region, Runyankore is one of the most widely spoken Runyakitara languages.</p>
-                    <div class="language-stats-modern">
-                        <span><i class="bi bi-people-fill"></i> 2.3M+ Speakers</span>
-                        <span><i class="bi bi-geo-alt-fill"></i> Ankole Region</span>
-                    </div>
+            <?php
+            $languages = [
+                ['num'=>'01','name'=>'Runyankore','desc'=>'Spoken primarily in Ankole region, Runyankore is one of the most widely spoken Runyakitara languages.','speakers'=>'2.3M+','region'=>'Ankole Region','img'=>'runyankore'],
+                ['num'=>'02','name'=>'Rukiga','desc'=>'The language of Kigezi region, known for its rich cultural heritage and beautiful highlands.','speakers'=>'2.0M+','region'=>'Kigezi Region','img'=>'rukiga'],
+                ['num'=>'03','name'=>'Runyoro','desc'=>'Spoken in Bunyoro kingdom, one of the oldest kingdoms in Uganda with deep historical roots.','speakers'=>'1.5M+','region'=>'Bunyoro Region','img'=>'runyoro'],
+                ['num'=>'04','name'=>'Rutooro','desc'=>'The language of Tooro kingdom, closely related to Runyoro with unique cultural expressions.','speakers'=>'1.4M+','region'=>'Tooro Region','img'=>'rutooro'],
+            ];
+            $delay = 0;
+            foreach ($languages as $lang):
+                $imgExts = ['jpg','png','webp'];
+                $imgSrc = null;
+                foreach ($imgExts as $ext) {
+                    if (file_exists(__DIR__ . "/images/languages/{$lang['img']}.$ext")) {
+                        $imgSrc = "/images/languages/{$lang['img']}.$ext";
+                        break;
+                    }
+                }
+            ?>
+            <div class="language-card-modern" data-aos="fade-up" data-aos-delay="<?php echo $delay; ?>">
+                <?php if ($imgSrc): ?>
+                <div class="language-card-img">
+                    <img src="<?php echo $imgSrc; ?>" alt="<?php echo $lang['name']; ?> region">
                 </div>
-                
-                <div class="language-card-modern" data-aos="fade-up" data-aos-delay="100">
-                    <div class="language-number">02</div>
-                    <h3>Rukiga</h3>
-                    <p>The language of Kigezi region, known for its rich cultural heritage and beautiful highlands.</p>
-                    <div class="language-stats-modern">
-                        <span><i class="bi bi-people-fill"></i> 2.0M+ Speakers</span>
-                        <span><i class="bi bi-geo-alt-fill"></i> Kigezi Region</span>
-                    </div>
+                <?php endif; ?>
+                <div class="language-number"><?php echo $lang['num']; ?></div>
+                <h3><?php echo $lang['name']; ?></h3>
+                <p><?php echo $lang['desc']; ?></p>
+                <div class="language-stats-modern">
+                    <span><i class="bi bi-people-fill"></i> <?php echo $lang['speakers']; ?> Speakers</span>
+                    <span><i class="bi bi-geo-alt-fill"></i> <?php echo $lang['region']; ?></span>
                 </div>
-                
-                <div class="language-card-modern" data-aos="fade-up" data-aos-delay="200">
-                    <div class="language-number">03</div>
-                    <h3>Runyoro</h3>
-                    <p>Spoken in Bunyoro kingdom, one of the oldest kingdoms in Uganda with deep historical roots.</p>
-                    <div class="language-stats-modern">
-                        <span><i class="bi bi-people-fill"></i> 1.5M+ Speakers</span>
-                        <span><i class="bi bi-geo-alt-fill"></i> Bunyoro Region</span>
-                    </div>
-                </div>
-                
-                <div class="language-card-modern" data-aos="fade-up" data-aos-delay="300">
-                    <div class="language-number">04</div>
-                    <h3>Rutooro</h3>
-                    <p>The language of Tooro kingdom, closely related to Runyoro with unique cultural expressions.</p>
-                    <div class="language-stats-modern">
-                        <span><i class="bi bi-people-fill"></i> 1.4M+ Speakers</span>
-                        <span><i class="bi bi-geo-alt-fill"></i> Tooro Region</span>
-                    </div>
-                </div>
+            </div>
+            <?php $delay += 100; endforeach; ?>
             </div>
         </div>
     </section>
@@ -339,64 +388,7 @@ closeDBConnection($db);
         </div>
     </section>
     
-    <!-- Footer -->
-    <footer class="footer-modern">
-        <div class="container">
-            <div class="footer-content-modern">
-                <div class="footer-brand">
-                    <div class="footer-logo">
-                        <i class="bi bi-translate"></i>
-                        <span>Runyakitara Hub</span>
-                    </div>
-                    <p>Preserving language, celebrating culture, and connecting communities through education.</p>
-                    <div class="social-links-modern">
-                        <a href="#" class="social-link"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="social-link"><i class="bi bi-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="social-link"><i class="bi bi-youtube"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-links-modern">
-                    <div class="footer-column">
-                        <h4>Learn</h4>
-                        <ul>
-                            <li><a href="lessons.php">Lessons</a></li>
-                            <li><a href="dictionary.php">Dictionary</a></li>
-                            <li><a href="grammar.php">Grammar</a></li>
-                            <li><a href="proverbs.php">Proverbs</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="footer-column">
-                        <h4>Resources</h4>
-                        <ul>
-                            <li><a href="media.php">Media</a></li>
-                            <li><a href="translations.php">Translations</a></li>
-                            <li><a href="news.php">News</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="footer-column">
-                        <h4>Support</h4>
-                        <ul>
-                            <li><a href="contact.php">Contact</a></li>
-                            <li><a href="#">Help Center</a></li>
-                            <li><a href="admin/login.php">Admin Login</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom-modern">
-                <p>&copy; <?php echo date('Y'); ?> Runyakitara Hub. All rights reserved.</p>
-                <div class="footer-bottom-links">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <?php include 'includes/footer.php'; ?>
     
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
