@@ -17,6 +17,7 @@ $currentPage = 'contact';
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/pages.css">
     <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/navbar.css">
 </head>
 <body>
     <?php include 'includes/nav.php'; ?>
@@ -66,26 +67,29 @@ $currentPage = 'contact';
                     <form class="contact-form" id="contactForm" method="post" novalidate autocomplete="on">
                         <div class="form-group">
                             <label for="name" class="required">Name</label>
-                            <input type="text" id="name" name="name" required minlength="2" maxlength="100" autocomplete="name">
+                            <input type="text" id="name" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Your full name">
+                            <div class="field-error" id="nameError"></div>
                         </div>
                         
                         <div class="form-group">
                             <label for="email" class="required">Email</label>
-                            <input type="email" id="email" name="email" required autocomplete="email">
+                            <input type="email" id="email" name="email" required autocomplete="email" placeholder="your@email.com">
+                            <div class="field-error" id="emailError"></div>
                         </div>
                         
                         <div class="form-group">
                             <label for="subject" class="required">Subject</label>
-                            <input type="text" id="subject" name="subject" required minlength="5" maxlength="200" autocomplete="off">
+                            <input type="text" id="subject" name="subject" required minlength="5" maxlength="200" autocomplete="off" placeholder="What is this about?">
+                            <div class="field-error" id="subjectError"></div>
                         </div>
                         
                         <div class="form-group">
                             <label for="message" class="required">Message</label>
-                            <textarea id="message" name="message" rows="6" required minlength="20" autocomplete="off"></textarea>
-                            <span class="field-hint">Minimum 20 characters required</span>
+                            <textarea id="message" name="message" rows="6" required minlength="20" autocomplete="off" placeholder="Write your message here..."></textarea>
+                            <div class="field-error" id="messageError"></div>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary" id="sendBtn" onclick="handleContactSubmit(event)">
+                        <button type="submit" class="btn btn-primary" id="sendBtn">
                             <i class="bi bi-send"></i> Send Message
                         </button>
                     </form>
@@ -117,17 +121,66 @@ $currentPage = 'contact';
     <script>
         AOS.init({ duration: 800, once: true, offset: 100 });
 
-        function handleContactSubmit(e) {
-            e.preventDefault();
+        function showError(fieldId, errorId, msg) {
+            var el = document.getElementById(fieldId);
+            var err = document.getElementById(errorId);
+            el.style.borderColor = '#ef4444';
+            err.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> ' + msg;
+            err.style.display = 'flex';
+        }
 
-            var name = document.getElementById('name').value.trim();
-            var email = document.getElementById('email').value.trim();
+        function clearError(fieldId, errorId) {
+            var el = document.getElementById(fieldId);
+            var err = document.getElementById(errorId);
+            el.style.borderColor = '';
+            err.style.display = 'none';
+        }
+
+        function validateForm() {
+            var valid = true;
+            var name    = document.getElementById('name').value.trim();
+            var email   = document.getElementById('email').value.trim();
             var subject = document.getElementById('subject').value.trim();
             var message = document.getElementById('message').value.trim();
 
-            if (!name || !email || !subject || !message) return false;
+            clearError('name','nameError');
+            clearError('email','emailError');
+            clearError('subject','subjectError');
+            clearError('message','messageError');
 
-            var form = document.getElementById('contactForm');
+            if (!name || name.length < 2) {
+                showError('name','nameError','Please enter your name (at least 2 characters).');
+                valid = false;
+            }
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showError('email','emailError','Please enter a valid email address.');
+                valid = false;
+            }
+            if (!subject || subject.length < 5) {
+                showError('subject','subjectError','Subject must be at least 5 characters.');
+                valid = false;
+            }
+            if (!message || message.length < 20) {
+                showError('message','messageError','Message must be at least 20 characters.');
+                valid = false;
+            }
+            return valid;
+        }
+
+        // Live validation on blur
+        ['name','email','subject','message'].forEach(function(id) {
+            document.getElementById(id).addEventListener('blur', function() { validateForm(); });
+            document.getElementById(id).addEventListener('input', function() {
+                clearError(id, id + 'Error');
+                this.style.borderColor = this.value.trim() ? '#10b981' : '';
+            });
+        });
+
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            var form = this;
             var btn = document.getElementById('sendBtn');
             var originalText = btn.innerHTML;
             btn.disabled = true;
@@ -162,15 +215,17 @@ $currentPage = 'contact';
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 });
-
-            return false;
-        }
+        });
 
         function resetContactForm() {
             var form = document.getElementById('contactForm');
             var successCard = document.getElementById('successCard');
             successCard.style.display = 'none';
             form.reset();
+            ['name','email','subject','message'].forEach(function(id) {
+                clearError(id, id + 'Error');
+                document.getElementById(id).style.borderColor = '';
+            });
             form.style.opacity = '0';
             form.style.display = 'block';
             setTimeout(function() { form.style.opacity = '1'; }, 50);
@@ -178,6 +233,16 @@ $currentPage = 'contact';
     </script>
 
     <style>
+        .field-error {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+        .field-error i { font-size: 14px; flex-shrink: 0; }
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
             to   { opacity: 1; transform: translateY(0); }
