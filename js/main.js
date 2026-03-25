@@ -2,7 +2,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const mobileToggle = document.querySelector('.mobile-toggle');
     const navLinks = document.querySelector('.nav-links');
-    const navbar = document.querySelector('.navbar');
 
     // Mobile menu toggle
     if (mobileToggle && navLinks) {
@@ -18,28 +17,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close mobile menu when clicking outside
     if (navLinks) {
         document.addEventListener('click', function(event) {
-            if (!event.target.closest('.navbar')) {
+            if (!event.target.closest('.navbar-modern')) {
                 navLinks.classList.remove('active');
                 if (mobileToggle) {
                     mobileToggle.innerHTML = '<i class="bi bi-list"></i>';
                 }
             }
-        });
-    }
-
-    // Navbar scroll effect
-    if (navbar) {
-        let lastScroll = 0;
-        window.addEventListener('scroll', function() {
-            const currentScroll = window.pageYOffset;
-            
-            if (currentScroll > 100) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-            
-            lastScroll = currentScroll;
         });
     }
 
@@ -502,19 +485,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Navbar scroll effect
-    let lastScroll = 0;
-    window.addEventListener('scroll', function() {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-        
-        lastScroll = currentScroll;
-    });
+    // Navbar scroll effect — gradient at top, white after scroll
+    if (navbar) {
+        const setNavbarState = () => {
+            navbar.classList.toggle('scrolled', window.pageYOffset > 80);
+        };
+        setNavbarState();
+        window.addEventListener('scroll', setNavbarState, { passive: true });
+    }
 
     // Close dropdowns when scrolling
     window.addEventListener('scroll', function() {
@@ -559,3 +537,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Hero slideshow
+(function() {
+    const slides = document.querySelectorAll('.hero-slide');
+    if (slides.length < 2) return;
+    let current = 0;
+    setInterval(function() {
+        slides[current].classList.remove('active');
+        current = (current + 1) % slides.length;
+        slides[current].classList.add('active');
+    }, 5000);
+})();

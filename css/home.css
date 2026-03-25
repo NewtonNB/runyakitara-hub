@@ -10,7 +10,10 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    padding: 120px 0 80px;
+    padding: 0;
+    margin-top: 0;
+    max-width: 100%;
+    width: 100%;
 }
 
 .hero-background {
@@ -43,13 +46,30 @@
     background-repeat: no-repeat;
 }
 
+/* Hero slideshow */
+.hero-slideshow {
+    position: absolute;
+    inset: 0;
+}
+
+.hero-slide {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1.2s ease-in-out;
+}
+
+.hero-slide.active {
+    opacity: 1;
+}
+
 .hero-image-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(102, 126, 234, 0.75);
+    inset: 0;
+    background: linear-gradient(135deg, rgba(102,126,234,0.78) 0%, rgba(118,75,162,0.78) 100%);
     z-index: 1;
 }
 
@@ -63,6 +83,7 @@
         radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
         radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
     animation: float 20s ease-in-out infinite;
+    z-index: 2;
 }
 
 @keyframes float {
@@ -77,6 +98,7 @@
     right: 0;
     bottom: 0;
     overflow: hidden;
+    pointer-events: none;
 }
 
 .shape {
@@ -122,6 +144,7 @@
     text-align: center;
     max-width: 900px;
     margin: 0 auto;
+    padding: 140px 20px 80px;
 }
 
 .hero-badge {
@@ -748,134 +771,7 @@
     transform: translateY(-3px);
 }
 
-/* Footer - Modern */
-.footer-modern {
-    background: #1e293b;
-    padding: 60px 0 30px;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.footer-content-modern {
-    display: grid;
-    grid-template-columns: 2fr 3fr;
-    gap: 60px;
-    margin-bottom: 40px;
-}
-
-.footer-brand {
-    max-width: 400px;
-}
-
-.footer-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 24px;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 16px;
-}
-
-.footer-logo i {
-    font-size: 32px;
-    color: #8b5cf6;
-}
-
-.footer-brand p {
-    font-size: 15px;
-    line-height: 1.7;
-    margin-bottom: 24px;
-}
-
-.social-links-modern {
-    display: flex;
-    gap: 12px;
-}
-
-.social-link {
-    width: 44px;
-    height: 44px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 18px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.social-link:hover {
-    background: #8b5cf6;
-    transform: translateY(-3px);
-}
-
-.footer-links-modern {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 40px;
-}
-
-.footer-column h4 {
-    color: white;
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 16px;
-}
-
-.footer-column ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.footer-column li {
-    margin-bottom: 10px;
-}
-
-.footer-column a {
-    color: rgba(255, 255, 255, 0.7);
-    text-decoration: none;
-    font-size: 14px;
-    transition: all 0.3s ease;
-}
-
-.footer-column a:hover {
-    color: #8b5cf6;
-    padding-left: 5px;
-}
-
-.footer-bottom-modern {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 30px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.footer-bottom-modern p {
-    font-size: 14px;
-    margin: 0;
-}
-
-.footer-bottom-links {
-    display: flex;
-    gap: 24px;
-}
-
-.footer-bottom-links a {
-    color: rgba(255, 255, 255, 0.7);
-    text-decoration: none;
-    font-size: 14px;
-    transition: color 0.3s ease;
-}
-
-.footer-bottom-links a:hover {
-    color: #8b5cf6;
-}
+/* Footer styles moved to style.css */
 
 /* Responsive Design */
 @media (max-width: 1024px) {
@@ -894,7 +790,7 @@
 
 @media (max-width: 768px) {
     .hero-modern {
-        padding: 100px 0 60px;
+        padding: 0;
         min-height: auto;
     }
     
@@ -1116,4 +1012,14 @@
     .culture-text .section-title-modern {
         font-size: 28px;
     }
+}
+
+@media (max-width: 480px) {
+    .hero-content-modern { padding: 100px 16px 60px; }
+    .hero-title-modern { font-size: 26px; }
+    .hero-badge { font-size: 12px; padding: 8px 16px; }
+    .hero-stat-item { padding: 12px 16px; }
+    .stat-number { font-size: 18px; }
+    .stat-label { font-size: 12px; }
+    .btn-hero { padding: 13px 24px; font-size: 14px; }
 }

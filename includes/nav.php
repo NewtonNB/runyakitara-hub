@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="css/navbar.css">
 <nav class="navbar-modern">
     <div class="container">
         <div class="navbar-brand">

@@ -12,7 +12,7 @@ require_once '../config/database.php';
 // ============================================
 // CONFIGURATION - UPDATE WITH YOUR EMAIL
 // ============================================
-$ADMIN_EMAIL = 'tukamuhebwanewton@gmail.com'; // Admin email to receive messages
+$ADMIN_EMAIL = 'runyakitarahub22@gmail.com'; // Admin email to receive messages
 $SITE_NAME = 'Runyakitara Hub';
 $SITE_URL = 'http://localhost:8000'; // Update with your domain
 

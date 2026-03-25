@@ -42,20 +42,30 @@ closeDBConnection($db);
     
     <!-- Hero Section -->
     <?php
-    $heroBgExts = ['jpg','png','webp'];
-    $heroBg = null;
-    foreach ($heroBgExts as $ext) {
-        if (file_exists(__DIR__ . "/images/hero/hero-bg.$ext")) {
-            $heroBg = "/images/hero/hero-bg.$ext";
-            break;
+    // Collect first 2 hero images only
+    $heroBgExts = ['jpg', 'jpeg', 'png', 'webp'];
+    $heroImages = [];
+    foreach (scandir(__DIR__ . '/images/hero') as $file) {
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (in_array($ext, $heroBgExts)) {
+            $heroImages[] = '/images/hero/' . $file;
+            if (count($heroImages) === 2) break;
         }
     }
+    $hasHeroImages = !empty($heroImages);
     ?>
-    <section class="hero-modern<?php echo $heroBg ? ' has-bg-image' : ''; ?>"<?php echo $heroBg ? " style=\"background-image:url('{$heroBg}');background-size:cover;background-position:center;\"" : ''; ?>>
+    <section class="hero-modern<?php echo $hasHeroImages ? ' has-bg-image' : ''; ?>">
         <div class="hero-background">
-            <div class="hero-gradient"></div>
-            <?php if ($heroBg): ?>
-            <div class="hero-image-overlay"></div>
+            <?php if ($hasHeroImages): ?>
+                <div class="hero-slideshow">
+                    <?php foreach ($heroImages as $i => $img): ?>
+                        <div class="hero-slide<?php echo $i === 0 ? ' active' : ''; ?>"
+                             style="background-image:url('<?php echo $img; ?>')"></div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="hero-image-overlay"></div>
+            <?php else: ?>
+                <div class="hero-gradient"></div>
             <?php endif; ?>
             <div class="hero-pattern"></div>
             <div class="floating-shapes">
@@ -271,7 +281,7 @@ closeDBConnection($db);
         <div class="container">
             <div class="culture-inner">
                 <?php
-                $cultureImgExts = ['jpg','png','webp'];
+                $cultureImgExts = ['jpg', 'jpeg', 'png', 'webp'];
                 $cultureImg = null;
                 foreach ($cultureImgExts as $ext) {
                     if (file_exists(__DIR__ . "/images/culture/culture.$ext")) {
@@ -332,7 +342,7 @@ closeDBConnection($db);
             ];
             $delay = 0;
             foreach ($languages as $lang):
-                $imgExts = ['jpg','png','webp'];
+                $imgExts = ['jpg', 'jpeg', 'png', 'webp'];
                 $imgSrc = null;
                 foreach ($imgExts as $ext) {
                     if (file_exists(__DIR__ . "/images/languages/{$lang['img']}.$ext")) {

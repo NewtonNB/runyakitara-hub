@@ -42,7 +42,7 @@ $currentPage = 'contact';
                             <i class="bi bi-envelope-fill"></i>
                             <div>
                                 <h4>Email</h4>
-                                <p>info@runyakitara.com</p>
+                                <p>runyakitarahub22@gmail.com</p>
                             </div>
                         </div>
                         <div class="contact-item">
