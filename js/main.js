@@ -51,42 +51,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Contact form submission with animation
-    const contactForm = document.querySelector('.contact-form');
-    if (contactForm) {
-        contactForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
-            submitBtn.disabled = true;
-            
-            const formData = new FormData(this);
-            
-            try {
-                const response = await fetch('api/contact.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showNotification('Message sent successfully!', 'success');
-                    this.reset();
-                } else {
-                    showNotification('Error: ' + result.message, 'error');
-                }
-            } catch (error) {
-                showNotification('Failed to send message. Please try again.', 'error');
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        });
-    }
-
     // Dictionary search with debounce
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -285,25 +249,6 @@ document.addEventListener('DOMContentLoaded', function() {
             top: 0,
             behavior: 'smooth'
         });
-    });
-});
-
-// Add loading state to buttons
-document.querySelectorAll('button[type="submit"]').forEach(button => {
-    button.addEventListener('click', function(e) {
-        if (this.form && !this.form.checkValidity()) {
-            return;
-        }
-        
-        const originalContent = this.innerHTML;
-        this.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading...';
-        this.disabled = true;
-        
-        // Re-enable after 3 seconds (adjust based on your needs)
-        setTimeout(() => {
-            this.innerHTML = originalContent;
-            this.disabled = false;
-        }, 3000);
     });
 });
 

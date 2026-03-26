@@ -79,7 +79,8 @@ closeDBConnection($db);
             <div class="hero-content-modern" data-aos="fade-up">
                 <div class="hero-badge">
                     <i class="bi bi-stars"></i>
-                    <span>Your Gateway to Runyakitara Languages</span>
+                    <span class="badge-full">Your Gateway to Runyakitara Languages</span>
+                    <span class="badge-short">Runyakitara Hub</span>
                 </div>
                 
                 <h1 class="hero-title-modern">

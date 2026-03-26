@@ -1,0 +1,316 @@
+/* ========================================
+   ADMIN RESPONSIVE — ALL PAGES
+   Fixes overflow and layout on all devices
+   ======================================== */
+
+/* Global overflow fix */
+.admin-layout,
+.admin-content,
+.admin-main,
+.admin-body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+/* ---- Activity items — prevent text overflow ---- */
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0; /* critical — without this flex children overflow */
+    overflow: hidden;
+}
+
+.activity-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.activity-meta {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+}
+
+.activity-status,
+.activity-badge {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* ---- Cards ---- */
+.activity-card,
+.chart-card,
+.stat-card {
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* ---- Tables ---- */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    min-width: 600px;
+}
+
+/* ---- Forms ---- */
+.admin-form input,
+.admin-form textarea,
+.admin-form select {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* ========================================
+   TABLET — max 1024px
+   ======================================== */
+@media (max-width: 1024px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+    }
+
+    .admin-sidebar.active {
+        transform: translateX(0);
+    }
+
+    .admin-content {
+        margin-left: 0 !important;
+    }
+
+    .mobile-toggle {
+        display: flex !important;
+    }
+
+    .charts-row,
+    .activity-row {
+        grid-template-columns: 1fr;
+    }
+
+    .header-search {
+        display: none;
+    }
+}
+
+/* ========================================
+   MOBILE — max 768px
+   ======================================== */
+@media (max-width: 768px) {
+    /* Header */
+    .admin-header {
+        padding: 0 14px !important;
+        height: 60px !important;
+    }
+
+    .header-left h1 {
+        font-size: 16px !important;
+    }
+
+    .breadcrumb {
+        display: none !important;
+    }
+
+    .user-menu-info {
+        display: none;
+    }
+
+    /* Main area */
+    .admin-main {
+        padding: 12px !important;
+    }
+
+    /* Stats — 2 columns */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .stat-card {
+        padding: 14px !important;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .stat-icon {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 18px !important;
+    }
+
+    .stat-number {
+        font-size: 22px !important;
+    }
+
+    .stat-label {
+        font-size: 11px !important;
+    }
+
+    /* Quick actions — 2 cols */
+    .quick-actions-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .quick-action-btn {
+        padding: 12px !important;
+        font-size: 13px !important;
+    }
+
+    .quick-action-btn i {
+        font-size: 20px !important;
+    }
+
+    /* Charts */
+    .charts-row,
+    .activity-row {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .card-body {
+        padding: 14px !important;
+        height: auto !important;
+        min-height: 200px;
+    }
+
+    .card-header {
+        padding: 14px !important;
+    }
+
+    .card-header h3 {
+        font-size: 14px !important;
+    }
+
+    /* Activity items */
+    .activity-item {
+        padding: 10px 12px !important;
+        gap: 10px !important;
+    }
+
+    .activity-icon {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 16px !important;
+        flex-shrink: 0;
+    }
+
+    .activity-title {
+        font-size: 13px !important;
+    }
+
+    /* Welcome section */
+    .welcome-section {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 20px !important;
+    }
+
+    .welcome-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+
+    /* Manage page tables */
+    .manage-table-wrapper,
+    .data-table {
+        overflow-x: auto;
+    }
+
+    /* Modal full width on mobile */
+    .modal-dialog {
+        margin: 10px !important;
+        max-width: calc(100vw - 20px) !important;
+    }
+
+    .modal-body {
+        padding: 16px !important;
+    }
+
+    /* Toolbar */
+    .toolbar,
+    .table-toolbar {
+        flex-direction: column !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+    }
+
+    .toolbar-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* ========================================
+   SMALL PHONE — max 480px
+   ======================================== */
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .stat-number {
+        font-size: 18px !important;
+    }
+
+    .quick-actions-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .quick-action-btn span {
+        font-size: 11px !important;
+    }
+
+    .admin-main {
+        padding: 8px !important;
+    }
+
+    .activity-card,
+    .chart-card {
+        border-radius: 12px !important;
+    }
+
+    /* Notification dropdown full screen */
+    .notification-dropdown {
+        position: fixed !important;
+        top: 60px !important;
+        left: 8px !important;
+        right: 8px !important;
+        width: auto !important;
+    }
+
+    .notification-dropdown::before {
+        display: none !important;
+    }
+}
+
+/* ========================================
+   SIDEBAR OVERLAY
+   ======================================== */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.active {
+    display: block;
+}

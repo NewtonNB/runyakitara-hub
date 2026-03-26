@@ -81,6 +81,7 @@ closeDBConnection($db);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin-responsive.css">
     <link rel="stylesheet" href="css/forms.css">
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/form-validation.css">

@@ -113,6 +113,8 @@
     font-size: 17px;
     color: #2d3748;
     line-height: 1.9;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .article-body p {
@@ -158,6 +160,8 @@
 
 .share-twitter  { background: #e7f3ff; color: #1d9bf0; }
 .share-facebook { background: #e8f0fe; color: #1877f2; }
+.share-whatsapp { background: #e8f8ef; color: #25d366; }
+.share-telegram { background: #e8f4fd; color: #0088cc; }
 .share-copy     { background: #f1f5f9; color: #475569; }
 
 .share-btn:hover {
@@ -340,14 +344,24 @@
     }
 
     .article-content-main {
-        padding: 28px 22px;
+        padding: 24px 18px;
     }
 
     .article-meta {
         gap: 12px;
+        flex-wrap: wrap;
     }
 
     .article-body {
-        font-size: 16px;
+        font-size: 15px;
+    }
+
+    .share-buttons {
+        flex-wrap: wrap;
+    }
+
+    .article-share {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

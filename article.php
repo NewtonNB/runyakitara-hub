@@ -44,6 +44,7 @@ $readTime  = max(1, ceil($wordCount / 200));
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/pages.css">
     <link rel="stylesheet" href="css/article.css">
 </head>
@@ -94,11 +95,17 @@ $readTime  = max(1, ceil($wordCount / 200));
                     <div class="article-share">
                         <span>Share this article:</span>
                         <div class="share-buttons">
+                            <a href="https://wa.me/?text=<?php echo urlencode($article['title'] . ' - ' . 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']); ?>" target="_blank" class="share-btn share-whatsapp">
+                                <i class="bi bi-whatsapp"></i> WhatsApp
+                            </a>
                             <a href="https://twitter.com/intent/tweet?text=<?php echo urlencode($article['title']); ?>&url=<?php echo urlencode('http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']); ?>" target="_blank" class="share-btn share-twitter">
                                 <i class="bi bi-twitter"></i> Twitter
                             </a>
                             <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo urlencode('http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']); ?>" target="_blank" class="share-btn share-facebook">
                                 <i class="bi bi-facebook"></i> Facebook
+                            </a>
+                            <a href="https://t.me/share/url?url=<?php echo urlencode('http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']); ?>&text=<?php echo urlencode($article['title']); ?>" target="_blank" class="share-btn share-telegram">
+                                <i class="bi bi-telegram"></i> Telegram
                             </a>
                             <button onclick="navigator.clipboard.writeText(window.location.href).then(()=>this.innerHTML='<i class=\'bi bi-check-lg\'></i> Copied!')" class="share-btn share-copy">
                                 <i class="bi bi-link-45deg"></i> Copy Link
