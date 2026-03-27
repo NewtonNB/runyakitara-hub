@@ -228,6 +228,11 @@ closeDBConnection($db);
 
         <!-- Main Area -->
         <main class="admin-main">
+            <?php if (isset($_GET['msg_updated'])): ?>
+                <div class="alert alert-success" style="margin-bottom:20px;">
+                    <i class="bi bi-check-circle"></i> Message status updated successfully.
+                </div>
+            <?php endif; ?>
 
             <!-- Quick Actions -->
             <div class="quick-actions-section">

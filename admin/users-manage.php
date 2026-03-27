@@ -108,8 +108,7 @@ closeDBConnection($db);
                         <i class="bi bi-plus-circle"></i> Add User
                     </button>
                 </div>
-                <table>
-                    <thead>
+                <table id="usersTable">                    <thead>
                         <tr>
                             <th>User</th>
                             <th>Role</th>

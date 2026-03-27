@@ -323,8 +323,7 @@ include 'includes/header.php';
         <div class="table-header">
             <h2>User Role Assignments</h2>
         </div>
-        <table>
-            <thead>
+        <table id="rolesTable">            <thead>
                 <tr>
                     <th>Username</th>
                     <th>Email</th>

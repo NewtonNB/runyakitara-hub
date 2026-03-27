@@ -139,3 +139,139 @@
     .tu-pagination { padding: 12px 16px; gap: 3px; }
     .tu-page-btn { min-width: 32px; height: 32px; font-size: 12px; }
 }
+
+/* ── Column Width Definitions ── */
+
+/* Shared: actions column always compact */
+table th:last-child,
+table td:last-child {
+    width: 100px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Shared: date columns */
+.col-date { width: 120px; white-space: nowrap; }
+
+/* Shared: badge/status columns */
+.col-badge { width: 130px; white-space: nowrap; }
+
+/* Shared: number/order column */
+.col-num { width: 50px; text-align: center; }
+
+/* ── Lessons Table ── */
+#lessonsTable { table-layout: fixed; }
+#lessonsTable th:nth-child(1),
+#lessonsTable td:nth-child(1) { width: 50px; text-align: center; }    /* # */
+#lessonsTable th:nth-child(2),
+#lessonsTable td:nth-child(2) { width: auto; }                         /* Title — takes remaining space */
+#lessonsTable th:nth-child(3),
+#lessonsTable td:nth-child(3) { width: 120px; text-align: center; }   /* Level */
+#lessonsTable th:nth-child(4),
+#lessonsTable td:nth-child(4) { width: 130px; white-space: nowrap; }  /* Created */
+#lessonsTable th:nth-child(5),
+#lessonsTable td:nth-child(5) { width: 100px; text-align: center; }   /* Actions */
+
+/* ── Dictionary Table ── */
+#dictionaryTable { table-layout: fixed; }
+#dictionaryTable th:nth-child(1),
+#dictionaryTable td:nth-child(1) { width: 160px; font-weight: 600; white-space: nowrap; } /* Word */
+#dictionaryTable th:nth-child(2),
+#dictionaryTable td:nth-child(2) { width: auto; }                                          /* Translation */
+#dictionaryTable th:nth-child(3),
+#dictionaryTable td:nth-child(3) { width: 160px; }                                         /* Pronunciation */
+#dictionaryTable th:nth-child(4),
+#dictionaryTable td:nth-child(4) { width: 120px; text-align: center; }                     /* Category */
+#dictionaryTable th:nth-child(5),
+#dictionaryTable td:nth-child(5) { width: 100px; text-align: center; }                     /* Actions */
+
+/* ── Articles Table ── */
+#articlesTable { table-layout: fixed; }
+#articlesTable th:nth-child(1),
+#articlesTable td:nth-child(1) { width: auto; }                        /* Title — takes remaining space */
+#articlesTable th:nth-child(2),
+#articlesTable td:nth-child(2) { width: 150px; white-space: nowrap; } /* Author */
+#articlesTable th:nth-child(3),
+#articlesTable td:nth-child(3) { width: 120px; text-align: center; }  /* Category */
+#articlesTable th:nth-child(4),
+#articlesTable td:nth-child(4) { width: 120px; white-space: nowrap; } /* Date */
+#articlesTable th:nth-child(5),
+#articlesTable td:nth-child(5) { width: 100px; text-align: center; }  /* Actions */
+
+/* ── Users Table ── */
+#usersTable { table-layout: fixed; }
+#usersTable th:nth-child(1),
+#usersTable td:nth-child(1) { width: auto; }                          /* User */
+#usersTable th:nth-child(2),
+#usersTable td:nth-child(2) { width: 130px; text-align: center; }    /* Role */
+#usersTable th:nth-child(3),
+#usersTable td:nth-child(3) { width: 130px; white-space: nowrap; }   /* Created */
+#usersTable th:nth-child(4),
+#usersTable td:nth-child(4) { width: 100px; text-align: center; }    /* Actions */
+
+/* ── Roles Table ── */
+#rolesTable { table-layout: fixed; }
+#rolesTable th:nth-child(1),
+#rolesTable td:nth-child(1) { width: 160px; font-weight: 600; white-space: nowrap; } /* Username */
+#rolesTable th:nth-child(2),
+#rolesTable td:nth-child(2) { width: auto; }                                          /* Email */
+#rolesTable th:nth-child(3),
+#rolesTable td:nth-child(3) { width: 220px; }                                         /* Current Roles */
+#rolesTable th:nth-child(4),
+#rolesTable td:nth-child(4) { width: 130px; white-space: nowrap; }                   /* Member Since */
+#rolesTable th:nth-child(5),
+#rolesTable td:nth-child(5) { width: 120px; text-align: center; }                    /* Actions */
+
+/* ── General table polish ── */
+.content-table table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.content-table thead th {
+    background: #f1f5f9;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-light, #64748b);
+    padding: 13px 16px;
+    border-bottom: 2px solid var(--border, #e2e8f0);
+    white-space: nowrap;
+}
+
+/* Zebra striping */
+.content-table tbody tr:nth-child(odd) td  { background: #ffffff; }
+.content-table tbody tr:nth-child(even) td { background: #f8fafc; }
+
+.content-table tbody td {
+    padding: 13px 16px;
+    font-size: 14px;
+    color: var(--text, #334155);
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 56px;
+    line-height: 1.4;
+}
+
+.content-table tbody tr:last-child td { border-bottom: none; }
+
+/* Hover — highlight full row */
+.content-table tbody tr:hover td {
+    background: rgba(102, 126, 234, 0.06) !important;
+    cursor: default;
+}
+
+/* Left accent on hover */
+.content-table tbody tr:hover td:first-child {
+    border-left: 3px solid var(--primary, #667eea);
+    padding-left: 13px;
+}
+
+@media (max-width: 768px) {
+    .content-table table { table-layout: auto; }
+    .content-table tbody td { height: auto; }
+}

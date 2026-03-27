@@ -152,7 +152,13 @@ closeDBConnection($db);
                             <?php foreach ($lessons as $lesson): ?>
                                 <tr>
                                     <td><?php echo $lesson['lesson_order']; ?></td>
-                                    <td><strong><?php echo htmlspecialchars($lesson['title']); ?></strong></td>
+                                    <td>
+                                        <strong 
+                                            style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;" 
+                                            title="<?php echo htmlspecialchars($lesson['title']); ?>">
+                                            <?php echo htmlspecialchars($lesson['title']); ?>
+                                        </strong>
+                                    </td>
                                     <td><span class="level-badge level-<?php echo $lesson['level']; ?>"><?php echo ucfirst($lesson['level']); ?></span></td>
                                     <td><?php echo date('M d, Y', strtotime($lesson['created_at'])); ?></td>
                                     <td>

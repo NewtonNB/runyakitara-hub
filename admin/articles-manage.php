@@ -173,7 +173,13 @@ closeDBConnection($db);
                             <?php else: ?>
                                 <?php foreach ($articles as $article): ?>
                                     <tr>
-                                        <td><strong><?php echo htmlspecialchars($article['title']); ?></strong></td>
+                                        <td>
+                                            <strong 
+                                                style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;"
+                                                title="<?php echo htmlspecialchars($article['title']); ?>">
+                                                <?php echo htmlspecialchars($article['title']); ?>
+                                            </strong>
+                                        </td>
                                         <td><?php echo htmlspecialchars($article['author']); ?></td>
                                         <td>
                                             <span class="category-badge category-<?php echo $article['category']; ?>">

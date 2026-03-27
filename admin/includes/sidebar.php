@@ -1,7 +1,7 @@
 <aside class="admin-sidebar" id="sidebar">
     <div class="sidebar-header">
         <a href="dashboard.php" class="sidebar-logo">
-            <i class="bi bi-translate"></i>
+            <img src="../images/hero/logo.jpeg" alt="Runyakitara Hub Logo" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.4);">
             <span>Runyakitara Hub</span>
         </a>
     </div>

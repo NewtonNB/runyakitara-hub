@@ -26,6 +26,7 @@ closeDBConnection($db);
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/pages.css">
     <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/engagement.css">
 </head>
 <body>
     <?php include 'includes/nav.php'; ?>
@@ -70,6 +71,7 @@ closeDBConnection($db);
                                     Start Lesson <i class="bi bi-arrow-right"></i>
                                 </a>
                             </div>
+                            <div data-engagement data-eng-type="lesson" data-eng-id="<?php echo $lesson['id']; ?>"></div>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -81,6 +83,7 @@ closeDBConnection($db);
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/engagement.js"></script>
     <script>
         AOS.init({
             duration: 800,

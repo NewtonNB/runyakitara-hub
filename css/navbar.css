@@ -52,6 +52,15 @@
     transition: background 0.4s ease, border 0.4s ease, color 0.4s ease;
 }
 
+.logo-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.5);
+    transition: border 0.4s ease;
+}
+
 .logo-text { display: flex; flex-direction: column; }
 
 .logo-main {
@@ -75,6 +84,9 @@
 .navbar-modern.scrolled .logo-icon {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
+}
+.navbar-modern.scrolled .logo-img {
+    border-color: #667eea;
 }
 .navbar-modern.scrolled .logo-main   { color: #1e293b; }
 .navbar-modern.scrolled .logo-tagline { color: #64748b; }

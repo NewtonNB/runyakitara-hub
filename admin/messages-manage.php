@@ -9,36 +9,43 @@ require_once '../config/database.php';
 $db = getDBConnection();
 
 // Handle actions
-$message = '';
-$messageType = '';
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     
     if ($action === 'update_status') {
-        $id = $_POST['id'] ?? '';
+        $id = (int)($_POST['id'] ?? 0);
         $status = $_POST['status'] ?? '';
-        
-        $stmt = $db->prepare("UPDATE contact_messages SET status=? WHERE id=?");
-        if ($stmt->execute([$status, $id])) {
-            $message = 'Status updated successfully!';
-            $messageType = 'success';
-        } else {
-            $message = 'Error updating status.';
-            $messageType = 'error';
+        $allowed = ['new', 'pending', 'completed'];
+        if ($id && in_array($status, $allowed)) {
+            $stmt = $db->prepare("UPDATE contact_messages SET status=? WHERE id=?");
+            $stmt->execute([$status, $id]);
         }
+        closeDBConnection($db);
+        // If came from notification (via ?id=), go back to dashboard so bell updates
+        $from = $_POST['from'] ?? '';
+        if ($from === 'notification') {
+            header('Location: dashboard.php?msg_updated=1');
+        } else {
+            header('Location: messages-manage.php?updated=1');
+        }
+        exit;
     } elseif ($action === 'delete') {
-        $id = $_POST['id'] ?? '';
-        $stmt = $db->prepare("DELETE FROM contact_messages WHERE id=?");
-        if ($stmt->execute([$id])) {
-            $message = 'Message deleted successfully!';
-            $messageType = 'success';
-        } else {
-            $message = 'Error deleting message.';
-            $messageType = 'error';
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) {
+            $stmt = $db->prepare("DELETE FROM contact_messages WHERE id=?");
+            $stmt->execute([$id]);
         }
+        closeDBConnection($db);
+        header('Location: messages-manage.php?deleted=1');
+        exit;
     }
 }
+
+// Flash messages from redirect
+$message = '';
+$messageType = '';
+if (isset($_GET['updated'])) { $message = 'Status updated successfully!'; $messageType = 'success'; }
+if (isset($_GET['deleted'])) { $message = 'Message deleted successfully!'; $messageType = 'success'; }
 
 // Get all messages
 $messages = [];
@@ -49,10 +56,12 @@ try {
     $messages = [];
 }
 
-// Get message for viewing
+// Get message for viewing — support both ?view= and ?id= (from notification links)
 $viewMessage = null;
-if (isset($_GET['view'])) {
-    $viewId = $_GET['view'];
+$autoOpenId = null;
+if (isset($_GET['view']) || isset($_GET['id'])) {
+    $viewId = $_GET['view'] ?? $_GET['id'];
+    $autoOpenId = (int)$viewId;
     $stmt = $db->prepare("SELECT * FROM contact_messages WHERE id=?");
     $stmt->execute([$viewId]);
     $viewMessage = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -225,9 +234,10 @@ closeDBConnection($db);
                 <!-- Content loaded dynamically -->
             </div>
             <div class="modal-footer">
-                <form method="POST" style="display: flex; gap: 12px; width: 100%;">
+                <form method="POST" action="messages-manage.php" style="display: flex; gap: 12px; width: 100%;">
                     <input type="hidden" name="action" value="update_status">
                     <input type="hidden" name="id" id="modalMessageId">
+                    <input type="hidden" name="from" id="modalFrom" value="">
                     <select name="status" class="btn btn-secondary" style="flex: 1;">
                         <option value="new">New</option>
                         <option value="pending">Pending</option>
@@ -249,12 +259,13 @@ closeDBConnection($db);
         
         const messagesData = <?php echo json_encode($messages); ?>;
         
-        function viewMessage(id) {
+        function viewMessage(id, from) {
             const message = messagesData.find(m => m.id == id);
             if (!message) return;
             
             document.getElementById('modalSubject').textContent = message.subject;
             document.getElementById('modalMessageId').value = message.id;
+            document.getElementById('modalFrom').value = from || '';
             document.querySelector('select[name="status"]').value = message.status;
             
             document.getElementById('modalBody').innerHTML = `
@@ -311,6 +322,13 @@ closeDBConnection($db);
                 closeModal();
             }
         });
+
+        // Auto-open modal if arriving from notification link
+        <?php if ($autoOpenId): ?>
+        window.addEventListener('DOMContentLoaded', function() {
+            viewMessage(<?php echo $autoOpenId; ?>, 'notification');
+        });
+        <?php endif; ?>
     </script>
 </body>
 </html>

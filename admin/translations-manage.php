@@ -97,8 +97,21 @@ closeDBConnection($db);
         .type-document{ background:rgba(245,158,11,0.1); color:#d97706; }
         .translation-section { margin-bottom:20px; }
         .translation-section h4 { font-size:11px; font-weight:700; color:var(--text-light); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.8px; }
-        .translation-text { padding:14px 16px; background:var(--light); border-radius:10px; font-size:14px; line-height:1.8; color:var(--text); white-space:pre-wrap; }
+        .translation-text { padding:14px 16px; background:var(--light); border-radius:10px; font-size:14px; line-height:1.8; color:var(--text); white-space:pre-wrap; height:100%; }
         .translation-footer { display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1px solid var(--border); }
+
+        /* Side-by-side layout */
+        .translation-body { display:grid; grid-template-columns:1fr auto 1fr; align-items:stretch; gap:16px; margin-bottom:20px; }
+        .translation-divider-col { display:flex; align-items:center; justify-content:center; color:var(--primary); font-size:22px; padding:0 4px; }
+        .translation-section { margin-bottom:0; display:flex; flex-direction:column; }
+        .translation-text { flex:1; }
+        .translation-original-text { background:rgba(102,126,234,0.06); border-left:3px solid var(--primary); }
+        .translation-english-text  { background:rgba(139,92,246,0.06); border-left:3px solid #8b5cf6; }
+
+        @media (max-width: 768px) {
+            .translation-body { grid-template-columns:1fr; }
+            .translation-divider-col { transform:rotate(90deg); }
+        }
     </style>
 </head>
 <body class="admin-body">
@@ -144,13 +157,16 @@ closeDBConnection($db);
                                     <div class="translation-title"><?php echo htmlspecialchars($trans['title']); ?></div>
                                     <span class="type-badge type-<?php echo $trans['type']; ?>"><?php echo ucfirst($trans['type']); ?></span>
                                 </div>
-                                <div class="translation-section">
-                                    <h4>Original (Runyakitara)</h4>
-                                    <div class="translation-text"><?php echo htmlspecialchars($trans['original_text']); ?></div>
-                                </div>
-                                <div class="translation-section">
-                                    <h4>Translation (English)</h4>
-                                    <div class="translation-text"><?php echo htmlspecialchars($trans['translated_text']); ?></div>
+                                <div class="translation-body">
+                                    <div class="translation-section">
+                                        <h4>Original (Runyakitara)</h4>
+                                        <div class="translation-text translation-original-text"><?php echo htmlspecialchars($trans['original_text']); ?></div>
+                                    </div>
+                                    <div class="translation-divider-col"><i class="bi bi-arrow-left-right"></i></div>
+                                    <div class="translation-section">
+                                        <h4>Translation (English)</h4>
+                                        <div class="translation-text translation-english-text"><?php echo htmlspecialchars($trans['translated_text']); ?></div>
+                                    </div>
                                 </div>
                                 <div class="translation-footer">
                                     <span style="font-size:13px;color:var(--text-light);"><i class="bi bi-clock"></i> <?php echo date('M d, Y', strtotime($trans['created_at'])); ?></span>

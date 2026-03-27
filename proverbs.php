@@ -25,6 +25,7 @@ closeDBConnection($db);
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/pages.css">
     <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/engagement.css">
 </head>
 <body>
     <?php include 'includes/nav.php'; ?>
@@ -62,6 +63,7 @@ closeDBConnection($db);
                             <div class="proverb-meaning">
                                 <strong>Meaning:</strong> <?php echo htmlspecialchars($proverb['meaning'] ?? ''); ?>
                             </div>
+                            <div data-engagement data-eng-type="proverb" data-eng-id="<?php echo $proverb['id']; ?>"></div>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -73,6 +75,7 @@ closeDBConnection($db);
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/engagement.js"></script>
     <script>
         AOS.init({
             duration: 800,

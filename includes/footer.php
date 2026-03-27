@@ -6,7 +6,7 @@
                 <!-- Brand -->
                 <div class="footer-brand">
                     <div class="footer-logo">
-                        <div class="footer-logo-icon"><i class="bi bi-translate"></i></div>
+                        <div class="footer-logo-icon"><img src="images/hero/logo.jpeg" alt="Runyakitara Hub Logo" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.3);"></div>
                         <div class="footer-logo-text">
                             <span class="footer-logo-name">Runyakitara Hub</span>
                             <span class="footer-logo-tagline">Language & Culture</span>

@@ -25,6 +25,7 @@ closeDBConnection($db);
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/pages.css">
     <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/engagement.css">
 </head>
 <body>
     <?php include 'includes/nav.php'; ?>
@@ -63,6 +64,7 @@ closeDBConnection($db);
                                     <div><?php echo nl2br(htmlspecialchars($topic['examples'])); ?></div>
                                 </div>
                             <?php endif; ?>
+                            <div data-engagement data-eng-type="grammar" data-eng-id="<?php echo $topic['id']; ?>"></div>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -74,6 +76,7 @@ closeDBConnection($db);
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/engagement.js"></script>
     <script>
         AOS.init({
             duration: 800,

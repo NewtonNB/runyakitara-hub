@@ -455,7 +455,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="login-left">
                 <div class="brand-section">
                     <div class="brand-logo">
-                        <i class="bi bi-translate"></i>
+                        <img src="../images/hero/logo.jpeg" alt="Runyakitara Hub Logo" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.5);">
                     </div>
                     <h1>Runyakitara Hub</h1>
                     <p>Admin Portal - Manage Your Content</p>

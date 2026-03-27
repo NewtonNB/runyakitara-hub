@@ -86,6 +86,80 @@ closeDBConnection($db);
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/form-validation.css">
     <link rel="stylesheet" href="css/table-utils.css">
+    <style>
+        #proverbsContainer { padding: 24px; }
+
+        .proverbs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .proverb-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--border, #e2e8f0);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .proverb-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.12);
+            border-color: rgba(102,126,234,0.3);
+        }
+
+        .proverb-text {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--dark, #1e293b);
+            font-style: italic;
+            border-left: 3px solid var(--primary, #667eea);
+            padding-left: 12px;
+            line-height: 1.5;
+        }
+
+        .proverb-translation {
+            font-size: 13px;
+            color: var(--text, #334155);
+            padding-left: 15px;
+            line-height: 1.5;
+        }
+
+        .proverb-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .proverb-meaning {
+            font-size: 12px;
+            color: var(--text-light, #64748b);
+            line-height: 1.5;
+        }
+
+        .proverb-meaning strong {
+            color: var(--text, #334155);
+            font-weight: 600;
+        }
+
+        .proverb-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--border, #e2e8f0);
+            margin-top: auto;
+        }
+
+        @media (max-width: 900px) {
+            .proverbs-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body class="admin-body">
 <div class="admin-layout">
@@ -124,16 +198,21 @@ closeDBConnection($db);
                     </div>
                 <?php else: ?>
                     <div id="proverbsContainer" style="padding: 24px;">
+                        <div class="proverbs-grid">
                         <?php foreach ($proverbs as $prov): ?>
                             <div class="proverb-card">
                                 <div class="proverb-text">"<?php echo htmlspecialchars($prov['proverb'] ?? ''); ?>"</div>
                                 <div class="proverb-translation"><?php echo htmlspecialchars($prov['translation'] ?? ''); ?></div>
-                                <div class="proverb-meaning"><strong>Meaning:</strong> <?php echo htmlspecialchars($prov['meaning'] ?? ''); ?></div>
-                                <?php if (!empty($prov['usage'])): ?>
-                                    <div class="proverb-meaning"><strong>Usage:</strong> <?php echo htmlspecialchars($prov['usage']); ?></div>
-                                <?php endif; ?>
+                                <div class="proverb-meta">
+                                    <?php if (!empty($prov['meaning'])): ?>
+                                        <div class="proverb-meaning"><strong>Meaning:</strong> <?php echo htmlspecialchars($prov['meaning']); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($prov['usage'])): ?>
+                                        <div class="proverb-meaning"><strong>Usage:</strong> <?php echo htmlspecialchars($prov['usage']); ?></div>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="proverb-footer">
-                                    <span style="font-size:13px;color:var(--text-light);"><i class="bi bi-clock"></i> <?php echo date('M d, Y', strtotime($prov['created_at'])); ?></span>
+                                    <span style="font-size:12px;color:var(--text-light);"><i class="bi bi-clock"></i> <?php echo date('M d, Y', strtotime($prov['created_at'])); ?></span>
                                     <div class="action-buttons">
                                         <?php if ($showTrash): ?>
                                             <form method="POST" style="display:inline;">
@@ -150,6 +229,7 @@ closeDBConnection($db);
                                 </div>
                             </div>
                         <?php endforeach; ?>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>

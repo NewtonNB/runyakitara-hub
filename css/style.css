@@ -2568,9 +2568,13 @@ p {
    ======================================== */
 
 /* Navbar icons */
-.navbar i {
+.navbar-modern:not(.scrolled) i {
     color: white !important;
     opacity: 1 !important;
+}
+
+.navbar-modern.scrolled .nav-link i {
+    color: inherit !important;
 }
 
 .logo i {
@@ -2736,10 +2740,8 @@ footer i {
 }
 
 /* Ensure all icons have proper sizing */
-i {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+i.bi {
+    display: inline-block;
 }
 
 /* Icon backgrounds - ensure they're visible */
@@ -2836,7 +2838,7 @@ i {
 }
 
 /* Fix any icon opacity issues */
-* i {
+.bi {
     opacity: 1 !important;
 }
 

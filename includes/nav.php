@@ -3,7 +3,7 @@
     <div class="container">
         <div class="navbar-brand">
             <div class="logo-wrapper">
-                <i class="bi bi-translate logo-icon"></i>
+                <img src="images/hero/logo.jpeg" alt="Runyakitara Hub Logo" class="logo-img">
                 <div class="logo-text">
                     <span class="logo-main">Runyakitara Hub</span>
                     <span class="logo-tagline">Language & Culture</span>
