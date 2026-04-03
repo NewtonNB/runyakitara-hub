@@ -44,7 +44,7 @@ $message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
 try {
     // Save to database — this is the primary action
     $db   = getDBConnection();
-    $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message, status, created_at) VALUES (?, ?, ?, ?, 'new', datetime('now'))");
+    $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message, status, created_at) VALUES (?, ?, ?, ?, 'new', NOW())");
     $dbSaved = $stmt->execute([$name, $email, $subject, $message]);
     closeDBConnection($db);
 

@@ -24,10 +24,10 @@ function getSetting($db, $key, $default = '') {
 // Ensure settings table exists
 try {
     $db->exec("CREATE TABLE IF NOT EXISTS settings (
-        key TEXT PRIMARY KEY,
-        value TEXT,
-        updated_at TEXT DEFAULT (datetime('now'))
-    )");
+        `key`       VARCHAR(100) PRIMARY KEY,
+        `value`     TEXT,
+        updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 } catch (Exception $e) {}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -37,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fields = ['site_name', 'site_tagline', 'contact_email', 'items_per_page'];
         foreach ($fields as $field) {
             $val = trim($_POST[$field] ?? '');
-            $stmt = $db->prepare("INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
-                ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at");
+            $stmt = $db->prepare("INSERT INTO settings (`key`, `value`, updated_at) VALUES (?, ?, NOW())
+                ON DUPLICATE KEY UPDATE `value` = VALUES(`value`), updated_at = NOW()");
             $stmt->execute([$field, $val]);
         }
         $message = 'General settings saved.';

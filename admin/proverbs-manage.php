@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $meaning = $_POST['meaning'] ?? '';
         $usage = $_POST['usage'] ?? '';
 
-        $stmt = $db->prepare("INSERT INTO proverbs (proverb, translation, meaning, usage, created_at) VALUES (?, ?, ?, ?, datetime('now'))");
+        $stmt = $db->prepare("INSERT INTO proverbs (proverb, translation, meaning, usage, created_at) VALUES (?, ?, ?, ?, NOW())");
         if ($stmt->execute([$proverb, $translation, $meaning, $usage])) {
             $message = 'Proverb added successfully!';
             $messageType = 'success';

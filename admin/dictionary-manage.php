@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $example = $_POST['example'] ?? '';
         $category = $_POST['category'] ?? '';
         
-        $stmt = $db->prepare("INSERT INTO dictionary (word_runyakitara, word_english, pronunciation, example_sentence, category, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))");
+        $stmt = $db->prepare("INSERT INTO dictionary (word_runyakitara, word_english, pronunciation, example_sentence, category, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
         if ($stmt->execute([$word, $translation, $pronunciation, $example, $category])) {
             $message = 'Word added successfully!';
             $messageType = 'success';

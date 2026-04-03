@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $examples = $_POST['examples'] ?? '';
         $difficulty = $_POST['difficulty'] ?? '';
 
-        $stmt = $db->prepare("INSERT INTO grammar_topics (title, content, examples, difficulty, created_at) VALUES (?, ?, ?, ?, datetime('now'))");
+        $stmt = $db->prepare("INSERT INTO grammar_topics (title, content, examples, difficulty, created_at) VALUES (?, ?, ?, ?, NOW())");
         if ($stmt->execute([$title, $content, $examples, $difficulty])) {
             $message = 'Grammar topic added successfully!';
             $messageType = 'success';

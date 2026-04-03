@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $orderStmt = $db->query("SELECT COALESCE(MAX(lesson_order), 0) + 1 as next_order FROM lessons");
         $nextOrder = $orderStmt->fetch(PDO::FETCH_ASSOC)['next_order'];
 
-        $stmt = $db->prepare("INSERT INTO lessons (title, level, content, vocabulary, lesson_order, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))");
+        $stmt = $db->prepare("INSERT INTO lessons (title, level, content, vocabulary, lesson_order, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
         if ($stmt->execute([$title, $level, $content, $vocabulary, $nextOrder])) {
             $message = 'Lesson added successfully!';
             $messageType = 'success';

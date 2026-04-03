@@ -124,7 +124,7 @@ class RBAC {
             INNER JOIN user_roles ur ON rp.role_id = ur.role_id
             WHERE ur.user_id = ? 
             AND ur.is_active = 1
-            AND (ur.expires_at IS NULL OR ur.expires_at > datetime('now'))
+            AND (ur.expires_at IS NULL OR ur.expires_at > NOW())
         ");
         $stmt->execute([$this->userId]);
         $this->userPermissions = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -141,7 +141,7 @@ class RBAC {
             WHERE ur.user_id = ? 
             AND ur.is_active = 1
             AND r.is_active = 1
-            AND (ur.expires_at IS NULL OR ur.expires_at > datetime('now'))
+            AND (ur.expires_at IS NULL OR ur.expires_at > NOW())
         ");
         $stmt->execute([$this->userId]);
         $this->userRoles = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -177,7 +177,7 @@ class RBAC {
                 // Update existing assignment
                 $stmt = $this->db->prepare("
                     UPDATE user_roles 
-                    SET is_active = 1, expires_at = ?, assigned_at = datetime('now')
+                    SET is_active = 1, expires_at = ?, assigned_at = NOW()
                     WHERE user_id = ? AND role_id = ?
                 ");
                 $stmt->execute([$expiresAt, $userId, $role['id']]);

@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $author = $_POST['author'] ?? '';
             $category = $_POST['category'] ?? '';
             
-            $stmt = $db->prepare("INSERT INTO articles (title, content, author, category, created_at) VALUES (?, ?, ?, ?, datetime('now'))");
+            $stmt = $db->prepare("INSERT INTO articles (title, content, author, category, created_at) VALUES (?, ?, ?, ?, NOW())");
             if ($stmt->execute([$title, $content, $author, $category])) {
                 $message = 'Article added successfully!';
                 $messageType = 'success';

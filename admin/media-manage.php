@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($filePath) {
-            $stmt = $db->prepare("INSERT INTO media (title, type, category, file_path, description, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))");
+            $stmt = $db->prepare("INSERT INTO media (title, type, category, file_path, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
             if ($stmt->execute([$title, $type, $category, $filePath, $description])) {
                 $message = 'Media added successfully!';
                 $messageType = 'success';

@@ -41,7 +41,7 @@ class ContactAPI extends BaseAPI {
         try {
             $stmt = $this->db->prepare("
                 INSERT INTO messages (name, email, subject, message, created_at) 
-                VALUES (?, ?, ?, ?, datetime('now'))
+                VALUES (?, ?, ?, ?, NOW())
             ");
             
             $stmt->execute([$name, $email, $subject, $message]);

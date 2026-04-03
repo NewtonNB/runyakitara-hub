@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $original_text = $_POST['original_text'] ?? '';
         $translated_text = $_POST['translated_text'] ?? '';
 
-        $stmt = $db->prepare("INSERT INTO translations (title, type, original_text, translated_text, created_at) VALUES (?, ?, ?, ?, datetime('now'))");
+        $stmt = $db->prepare("INSERT INTO translations (title, type, original_text, translated_text, created_at) VALUES (?, ?, ?, ?, NOW())");
         if ($stmt->execute([$title, $type, $original_text, $translated_text])) {
             $message = 'Translation added successfully!';
             $messageType = 'success';

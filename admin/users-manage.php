@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $role = $_POST['role'] ?? 'admin';
 
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-        $stmt = $db->prepare("INSERT INTO users (username, email, password, role, created_at) VALUES (?, ?, ?, ?, datetime('now'))");
+        $stmt = $db->prepare("INSERT INTO users (username, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())");
         if ($stmt->execute([$username, $email, $hashedPassword, $role])) {
             $message = 'User added successfully!';
             $messageType = 'success';
