@@ -47,7 +47,7 @@ closeDBConnection($db);
                     <p>Translations will be added soon!</p>
                 </div>
             <?php else: ?>
-                <div class="translations-grid">
+                <div class="translations-grid" data-realtime="translations">
                     <?php foreach ($translations as $index => $translation): ?>
                         <div class="translation-card" data-aos="fade-up" data-aos-delay="<?php echo $index * 100; ?>">
                             <div class="translation-header">
@@ -86,6 +86,7 @@ closeDBConnection($db);
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/realtime.js"></script>
     <script>
         AOS.init({
             duration: 800,

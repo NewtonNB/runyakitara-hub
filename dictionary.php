@@ -52,7 +52,7 @@ closeDBConnection($db);
                     <p>Dictionary entries will be added soon!</p>
                 </div>
             <?php else: ?>
-                <div class="dictionary-grid" id="dictionaryGrid">
+                <div class="dictionary-grid" id="dictionaryGrid" data-realtime="dictionary">
                     <?php foreach ($words as $index => $word): ?>
                         <div class="word-card" data-aos="fade-up" data-aos-delay="<?php echo ($index % 12) * 50; ?>">
                             <div class="word-header">
@@ -87,6 +87,7 @@ closeDBConnection($db);
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/realtime.js"></script>
     <script>
         AOS.init({
             duration: 800,

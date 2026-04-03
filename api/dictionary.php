@@ -1,50 +1,29 @@
 <?php
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
 require_once '../config/database.php';
+try {
+    $db       = getDBConnection();
+    $search   = $_GET['search']   ?? '';
+    $category = $_GET['category'] ?? '';
 
-$conn = getDBConnection();
+    $sql    = "SELECT * FROM dictionary WHERE deleted_at IS NULL";
+    $params = [];
 
-// Search functionality
-$search = isset($_GET['search']) ? $_GET['search'] : '';
-$category = isset($_GET['category']) ? $_GET['category'] : null;
+    if ($search) {
+        $sql .= " AND (word_runyakitara LIKE ? OR word_english LIKE ?)";
+        $params[] = "%$search%";
+        $params[] = "%$search%";
+    }
+    if ($category) {
+        $sql .= " AND category = ?";
+        $params[] = $category;
+    }
+    $sql .= " ORDER BY word_runyakitara ASC";
 
-$sql = "SELECT * FROM dictionary WHERE 1=1";
-$params = [];
-$types = "";
-
-if ($search) {
-    $sql .= " AND (word_runyakitara LIKE ? OR word_english LIKE ?)";
-    $searchParam = "%$search%";
-    $params[] = $searchParam;
-    $params[] = $searchParam;
-    $types .= "ss";
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
-
-if ($category) {
-    $sql .= " AND category = ?";
-    $params[] = $category;
-    $types .= "s";
-}
-
-$sql .= " ORDER BY word_runyakitara ASC";
-
-$stmt = $conn->prepare($sql);
-if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$result = $stmt->get_result();
-
-$words = [];
-while ($row = $result->fetch_assoc()) {
-    $words[] = $row;
-}
-
-echo json_encode([
-    'success' => true,
-    'data' => $words
-]);
-
-$stmt->close();
-closeDBConnection($conn);
-?>

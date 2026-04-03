@@ -187,8 +187,17 @@ $currentPage = 'contact';
             btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
 
             fetch('api/contact.php', { method: 'POST', body: new FormData(form) })
-                .then(function(r) { return r.json(); })
-                .then(function(result) {
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.text();
+                })
+                .then(function(text) {
+                    var result;
+                    try { result = JSON.parse(text); }
+                    catch(e) {
+                        console.error('Server response:', text);
+                        throw new Error('Invalid server response');
+                    }
                     if (result.success) {
                         form.style.transition = 'opacity 0.4s';
                         form.style.opacity = '0';
@@ -207,10 +216,10 @@ $currentPage = 'contact';
                         btn.innerHTML = originalText;
                     }
                 })
-                .catch(function() {
+                .catch(function(err) {
                     var msg = document.getElementById('formMessage');
                     msg.className = 'form-message error';
-                    msg.innerHTML = '<div><strong>Connection error.</strong> Please try again.</div>';
+                    msg.innerHTML = '<div><strong>Connection error:</strong> ' + err.message + '. Check console for details.</div>';
                     msg.style.display = 'flex';
                     btn.disabled = false;
                     btn.innerHTML = originalText;

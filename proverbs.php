@@ -48,7 +48,7 @@ closeDBConnection($db);
                     <p>Proverbs will be added soon!</p>
                 </div>
             <?php else: ?>
-                <div class="proverbs-grid">
+                <div class="proverbs-grid" data-realtime="proverbs">
                     <?php foreach ($proverbs as $index => $proverb): ?>
                         <div class="proverb-card" data-aos="fade-up" data-aos-delay="<?php echo $index * 100; ?>">
                             <div class="proverb-icon">
@@ -76,6 +76,7 @@ closeDBConnection($db);
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
     <script src="js/engagement.js"></script>
+    <script src="js/realtime.js"></script>
     <script>
         AOS.init({
             duration: 800,

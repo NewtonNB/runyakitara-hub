@@ -49,7 +49,7 @@ closeDBConnection($db);
                     <p>Lessons will be added soon. Check back later!</p>
                 </div>
             <?php else: ?>
-                <div class="lessons-grid">
+                <div class="lessons-grid" data-realtime="lessons">
                     <?php foreach ($lessons as $index => $lesson):
                         $wordCount = str_word_count(strip_tags($lesson['content'] ?? ''));
                         $readTime  = max(1, ceil($wordCount / 150));
@@ -84,6 +84,7 @@ closeDBConnection($db);
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
     <script src="js/engagement.js"></script>
+    <script src="js/realtime.js"></script>
     <script>
         AOS.init({
             duration: 800,
