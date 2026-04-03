@@ -6,7 +6,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once '../config/database.php';
+require_once 'includes/soft-delete.php';
 $db = getDBConnection();
+ensureSoftDelete($db);
 
 // Handle actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -32,11 +34,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'delete') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
-            $stmt = $db->prepare("DELETE FROM contact_messages WHERE id=?");
-            $stmt->execute([$id]);
+            softDelete($db, 'contact_messages', $id);
         }
         closeDBConnection($db);
         header('Location: messages-manage.php?deleted=1');
+        exit;
+    } elseif ($action === 'restore') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) restoreRecord($db, 'contact_messages', $id);
+        closeDBConnection($db);
+        header('Location: messages-manage.php?trash=1&restored=1');
+        exit;
+    } elseif ($action === 'hard_delete') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id) hardDelete($db, 'contact_messages', $id);
+        closeDBConnection($db);
+        header('Location: messages-manage.php?trash=1&deleted=1');
         exit;
     }
 }
@@ -44,14 +57,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Flash messages from redirect
 $message = '';
 $messageType = '';
-if (isset($_GET['updated'])) { $message = 'Status updated successfully!'; $messageType = 'success'; }
-if (isset($_GET['deleted'])) { $message = 'Message deleted successfully!'; $messageType = 'success'; }
+$showTrash = isset($_GET['trash']);
+if (isset($_GET['updated']))  { $message = 'Status updated successfully!'; $messageType = 'success'; }
+if (isset($_GET['deleted']))  { $message = $showTrash ? 'Message permanently deleted.' : 'Message moved to trash.'; $messageType = 'success'; }
+if (isset($_GET['restored'])) { $message = 'Message restored.'; $messageType = 'success'; }
 
-// Get all messages
+// Get messages
 $messages = [];
+$trashCount = 0;
 try {
-    $stmt = $db->query("SELECT * FROM contact_messages ORDER BY created_at DESC");
+    if ($showTrash) {
+        $stmt = $db->query("SELECT * FROM contact_messages WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC");
+    } else {
+        $stmt = $db->query("SELECT * FROM contact_messages WHERE deleted_at IS NULL ORDER BY created_at DESC");
+    }
     $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $trashCount = (int)$db->query("SELECT COUNT(*) FROM contact_messages WHERE deleted_at IS NOT NULL")->fetchColumn();
 } catch (Exception $e) {
     $messages = [];
 }
@@ -147,18 +168,18 @@ closeDBConnection($db);
                 
                 <!-- Filter Tabs -->
                 <div class="filter-tabs">
-                    <button class="filter-tab active" onclick="filterMessages('all')">
-                        All Messages (<?php echo count($messages); ?>)
-                    </button>
-                    <button class="filter-tab" onclick="filterMessages('new')">
-                        New (<?php echo count(array_filter($messages, fn($m) => $m['status'] === 'new')); ?>)
-                    </button>
-                    <button class="filter-tab" onclick="filterMessages('pending')">
-                        Pending (<?php echo count(array_filter($messages, fn($m) => $m['status'] === 'pending')); ?>)
-                    </button>
-                    <button class="filter-tab" onclick="filterMessages('completed')">
-                        Completed (<?php echo count(array_filter($messages, fn($m) => $m['status'] === 'completed')); ?>)
-                    </button>
+                    <?php if ($showTrash): ?>
+                        <a href="messages-manage.php" class="filter-tab"><i class="bi bi-arrow-left"></i> Back</a>
+                        <span class="filter-tab active">Trash (<?php echo count($messages); ?>)</span>
+                    <?php else: ?>
+                        <button class="filter-tab active" onclick="filterMessages('all')">All (<?php echo count($messages); ?>)</button>
+                        <button class="filter-tab" onclick="filterMessages('new')">New (<?php echo count(array_filter($messages, fn($m) => $m['status'] === 'new')); ?>)</button>
+                        <button class="filter-tab" onclick="filterMessages('pending')">Pending (<?php echo count(array_filter($messages, fn($m) => $m['status'] === 'pending')); ?>)</button>
+                        <button class="filter-tab" onclick="filterMessages('completed')">Completed (<?php echo count(array_filter($messages, fn($m) => $m['status'] === 'completed')); ?>)</button>
+                        <?php if ($trashCount > 0): ?>
+                            <a href="?trash=1" class="filter-tab" style="margin-left:auto;color:var(--danger);border-color:rgba(239,68,68,0.3);"><i class="bi bi-trash"></i> Trash (<?php echo $trashCount; ?>)</a>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- Messages Grid -->
@@ -199,16 +220,29 @@ closeDBConnection($db);
                                         <?php echo date('M d, Y \a\t g:i A', strtotime($msg['created_at'])); ?>
                                     </div>
                                     <div class="message-actions">
+                                        <?php if ($showTrash): ?>
+                                            <form method="POST" style="display:inline;">
+                                                <input type="hidden" name="action" value="restore">
+                                                <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
+                                                <button type="submit" class="btn-icon btn-view" title="Restore"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                            </form>
+                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Permanently delete this message?');">
+                                                <input type="hidden" name="action" value="hard_delete">
+                                                <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
+                                                <button type="submit" class="btn-icon btn-delete" title="Delete Forever"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        <?php else: ?>
                                         <button class="btn-icon btn-view" onclick="viewMessage(<?php echo $msg['id']; ?>)" title="View">
                                             <i class="bi bi-eye"></i>
                                         </button>
-                                        <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this message?');">
+                                        <form method="POST" style="display: inline;">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
-                                            <button type="submit" class="btn-icon btn-delete" title="Delete">
+                                            <button type="submit" class="btn-icon btn-delete" title="Move to Trash">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>

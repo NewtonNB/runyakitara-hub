@@ -6,7 +6,11 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once '../config/database.php';
+require_once 'includes/soft-delete.php';
 $db = getDBConnection();
+// Add deleted_at to users if missing
+try { $db->exec("ALTER TABLE users ADD COLUMN deleted_at DATETIME DEFAULT NULL"); } catch(Exception $e) {}
+
 
 $message = '';
 $messageType = '';
@@ -46,21 +50,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'delete') {
         $id = $_POST['id'] ?? '';
         if ($id != $_SESSION['user_id']) {
-            $stmt = $db->prepare("DELETE FROM users WHERE id=?");
-            if ($stmt->execute([$id])) {
-                $message = 'User deleted successfully!';
-                $messageType = 'success';
-            }
+            softDelete($db, 'users', $id);
+            $message = 'User moved to trash.';
+            $messageType = 'success';
         } else {
             $message = 'Cannot delete your own account!';
             $messageType = 'error';
         }
+    } elseif ($action === 'restore') {
+        $id = $_POST['id'] ?? '';
+        restoreRecord($db, 'users', $id);
+        $message = 'User restored.';
+        $messageType = 'success';
+    } elseif ($action === 'hard_delete') {
+        $id = $_POST['id'] ?? '';
+        if ($id != $_SESSION['user_id']) {
+            hardDelete($db, 'users', $id);
+            $message = 'User permanently deleted.';
+            $messageType = 'success';
+        }
     }
 }
 
+$showTrash = isset($_GET['trash']);
 $users = [];
+$trashCount = 0;
 try {
-    $users = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+    if ($showTrash) {
+        $users = $db->query("SELECT * FROM users WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $users = $db->query("SELECT * FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+    }
+    $trashCount = (int)$db->query("SELECT COUNT(*) FROM users WHERE deleted_at IS NOT NULL")->fetchColumn();
 } catch (Exception $e) { $users = []; }
 
 closeDBConnection($db);
@@ -103,9 +124,17 @@ closeDBConnection($db);
 
             <div class="content-table">
                 <div class="table-header">
-                    <h2><i class="bi bi-people"></i> All Users (<?php echo count($users); ?>)</h2>
-                    <button class="btn-add" onclick="openAddModal()">
-                        <i class="bi bi-plus-circle"></i> Add User
+                    <h2><i class="bi bi-people"></i> <?php echo $showTrash ? 'Trash' : 'All Users'; ?> (<?php echo count($users); ?>)</h2>
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <?php if ($showTrash): ?>
+                            <a href="users-manage.php" class="btn-add" style="background:var(--text-light);"><i class="bi bi-arrow-left"></i> Back</a>
+                        <?php else: ?>
+                            <?php if ($trashCount > 0): ?>
+                                <a href="?trash=1" class="btn-add" style="background:rgba(239,68,68,0.1);color:var(--danger);box-shadow:none;"><i class="bi bi-trash"></i> Trash (<?php echo $trashCount; ?>)</a>
+                            <?php endif; ?>
+                            <button class="btn-add" onclick="openAddModal()"><i class="bi bi-plus-circle"></i> Add User</button>
+                        <?php endif; ?>
+                    </div>
                     </button>
                 </div>
                 <table id="usersTable">                    <thead>
@@ -135,9 +164,24 @@ closeDBConnection($db);
                                     <td><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
                                     <td>
                                         <div class="action-buttons">
-                                            <button class="btn-edit-modal" onclick='openEditModal(<?php echo json_encode(['id'=>$user['id'],'username'=>$user['username'],'email'=>$user['email'],'role'=>$user['role']]); ?>)' title="Edit"><i class="bi bi-pencil"></i></button>
-                                            <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                                                <button class="btn-delete-modal" onclick="openDeleteModal(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username'], ENT_QUOTES); ?>')" title="Delete"><i class="bi bi-trash"></i></button>
+                                            <?php if ($showTrash): ?>
+                                                <form method="POST" style="display:inline;">
+                                                    <input type="hidden" name="action" value="restore">
+                                                    <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+                                                    <button type="submit" class="btn-icon btn-view" title="Restore"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                                </form>
+                                                <?php if ($user['id'] != $_SESSION['user_id']): ?>
+                                                <form method="POST" style="display:inline;" onsubmit="return confirm('Permanently delete this user?');">
+                                                    <input type="hidden" name="action" value="hard_delete">
+                                                    <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+                                                    <button type="submit" class="btn-icon btn-delete" title="Delete Forever"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <button class="btn-edit-modal" onclick='openEditModal(<?php echo json_encode(['id'=>$user['id'],'username'=>$user['username'],'email'=>$user['email'],'role'=>$user['role']]); ?>)' title="Edit"><i class="bi bi-pencil"></i></button>
+                                                <?php if ($user['id'] != $_SESSION['user_id']): ?>
+                                                    <button class="btn-delete-modal" onclick="openDeleteModal(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username'], ENT_QUOTES); ?>')" title="Move to Trash"><i class="bi bi-trash"></i></button>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
                                     </td>
