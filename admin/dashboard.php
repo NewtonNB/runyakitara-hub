@@ -15,13 +15,14 @@ $tables = ['lessons', 'dictionary', 'proverbs', 'articles', 'contact_messages', 
 
 foreach ($tables as $table) {
     try {
-        $result = $db->query("SELECT COUNT(*) as count FROM $table");
+        $softDeleteTables = ['lessons', 'dictionary', 'proverbs', 'articles'];
+        $whereClause = in_array($table, $softDeleteTables) ? " WHERE deleted_at IS NULL" : "";
+        $result = $db->query("SELECT COUNT(*) as count FROM $table$whereClause");
         $row = $result->fetch(PDO::FETCH_ASSOC);
         $stats[$table] = $row['count'];
 
-        $lastMonth = $db->query("SELECT COUNT(*) as count FROM $table WHERE created_at < date('now', '-30 days')");
-        $lastMonthRow = $lastMonth->fetch(PDO::FETCH_ASSOC);
-        $lastMonthCount = $lastMonthRow['count'];
+        $lastMonth = $db->query("SELECT COUNT(*) as count FROM $table WHERE created_at < DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetch(PDO::FETCH_ASSOC);
+        $lastMonthCount = $lastMonth['count'];
 
         if ($lastMonthCount > 0) {
             $growth[$table] = round((($stats[$table] - $lastMonthCount) / $lastMonthCount) * 100, 1);
@@ -46,6 +47,12 @@ try {
     $stats['new_messages'] = $row['count'];
 } catch (Exception $e) { $stats['new_messages'] = 0; }
 
+// Pending comments count
+$stats['pending_comments'] = 0;
+try {
+    $stats['pending_comments'] = (int)$db->query("SELECT COUNT(*) FROM comments WHERE status != 'approved'")->fetchColumn();
+} catch (Exception $e) {}
+
 // Notifications
 $notifications = [];
 $notificationCount = 0;
@@ -56,11 +63,18 @@ try {
             'title'=>'New message from '.$row['name'],'description'=>$row['subject'],
             'time'=>$row['created_at'],'link'=>'messages-manage.php?id='.$row['id']];
     }
-    $stmt = $db->query("SELECT title, created_at FROM lessons WHERE created_at > datetime('now', '-1 day') ORDER BY created_at DESC LIMIT 3");
+    $stmt = $db->query("SELECT title, created_at FROM lessons WHERE created_at > DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY created_at DESC LIMIT 3");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $notifications[] = ['type'=>'lesson','icon'=>'book-fill','color'=>'primary',
             'title'=>'New lesson added','description'=>$row['title'],
             'time'=>$row['created_at'],'link'=>'lessons-manage.php'];
+    }
+    // Pending comments
+    $stmt = $db->query("SELECT id, name, comment, created_at FROM comments WHERE status != 'approved' ORDER BY created_at DESC LIMIT 3");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $notifications[] = ['type'=>'comment','icon'=>'chat-dots-fill','color'=>'warning',
+            'title'=>'Comment awaiting moderation','description'=>htmlspecialchars(mb_substr($row['comment'],0,60)),
+            'time'=>$row['created_at'],'link'=>'comments-manage.php'];
     }
     usort($notifications, fn($a,$b) => strtotime($b['time']) - strtotime($a['time']));
     $notifications = array_slice($notifications, 0, 10);

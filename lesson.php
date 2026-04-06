@@ -44,6 +44,7 @@ $readTime  = max(1, ceil($wordCount / 150));
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/pages.css">
     <link rel="stylesheet" href="css/lesson.css">
+    <link rel="stylesheet" href="css/engagement.css">
 </head>
 <body>
     <?php include 'includes/nav.php'; ?>
@@ -123,6 +124,9 @@ $readTime  = max(1, ceil($wordCount / 150));
                         <a href="lessons.php" class="lesson-all-btn">
                             <i class="bi bi-grid"></i> All Lessons
                         </a>
+
+                        <!-- Engagement -->
+                        <div data-engagement data-eng-type="lesson" data-eng-id="<?php echo (int)$lesson['id']; ?>" style="margin-top:24px;"></div>
                     </div>
                 </main>
 
@@ -156,6 +160,7 @@ $readTime  = max(1, ceil($wordCount / 150));
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/engagement.js"></script>
     <script>
         AOS.init({ duration: 800, once: true, offset: 50 });
     </script>

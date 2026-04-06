@@ -21,9 +21,23 @@ try {
             'link' => 'messages-manage.php?id=' . $row['id']
         ];
     }
+
+    // Pending comments
+    $stmt = $db->query("SELECT id, name, comment, created_at FROM comments WHERE status != 'approved' ORDER BY created_at DESC LIMIT 3");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $headerNotifications[] = [
+            'type' => 'comment',
+            'icon' => 'chat-dots-fill',
+            'color' => 'warning',
+            'title' => 'Comment awaiting moderation',
+            'description' => htmlspecialchars(mb_substr($row['comment'], 0, 60)),
+            'time' => $row['created_at'],
+            'link' => 'comments-manage.php'
+        ];
+    }
     
     // Recent content (last 24 hours)
-    $stmt = $db->query("SELECT title, created_at FROM lessons WHERE created_at > datetime('now', '-1 day') ORDER BY created_at DESC LIMIT 2");
+    $stmt = $db->query("SELECT title, created_at FROM lessons WHERE created_at > DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY created_at DESC LIMIT 2");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $headerNotifications[] = [
             'type' => 'lesson',
@@ -36,7 +50,7 @@ try {
         ];
     }
     
-    $stmt = $db->query("SELECT title, created_at FROM articles WHERE created_at > datetime('now', '-1 day') ORDER BY created_at DESC LIMIT 2");
+    $stmt = $db->query("SELECT title, created_at FROM articles WHERE created_at > DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY created_at DESC LIMIT 2");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $headerNotifications[] = [
             'type' => 'article',
@@ -82,6 +96,7 @@ try {
                         'users-manage.php' => 'people',
                         'settings.php' => 'gear',
                         'analytics.php' => 'graph-up',
+                        'comments-manage.php' => 'chat-dots',
                         default => 'speedometer2'
                     };
                 ?>"></i>
@@ -98,6 +113,7 @@ try {
                         'users-manage.php' => 'Manage Users',
                         'settings.php' => 'Settings',
                         'analytics.php' => 'Analytics',
+                        'comments-manage.php' => 'Manage Comments',
                         default => 'Admin Panel'
                     };
                 ?>
@@ -119,6 +135,7 @@ try {
                         'users-manage.php' => 'Users',
                         'settings.php' => 'Settings',
                         'analytics.php' => 'Analytics',
+                        'comments-manage.php' => 'Comments',
                         default => 'Page'
                     };
                 ?></span>

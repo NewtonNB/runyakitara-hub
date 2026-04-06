@@ -47,6 +47,7 @@ $readTime  = max(1, ceil($wordCount / 200));
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/pages.css">
     <link rel="stylesheet" href="css/article.css">
+    <link rel="stylesheet" href="css/engagement.css">
 </head>
 <body>
     <?php include 'includes/nav.php'; ?>
@@ -116,6 +117,9 @@ $readTime  = max(1, ceil($wordCount / 200));
                     <a href="news.php" class="article-back-btn">
                         <i class="bi bi-arrow-left"></i> Back to All Articles
                     </a>
+
+                    <!-- Engagement -->
+                    <div data-engagement data-eng-type="article" data-eng-id="<?php echo (int)$article['id']; ?>"></div>
                 </article>
 
                 <!-- Sidebar -->
@@ -161,6 +165,7 @@ $readTime  = max(1, ceil($wordCount / 200));
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/engagement.js"></script>
     <script>
         AOS.init({ duration: 800, once: true, offset: 100 });
     </script>
