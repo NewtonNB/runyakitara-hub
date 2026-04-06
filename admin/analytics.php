@@ -46,6 +46,30 @@ try {
     $topLessons = $db->query("SELECT title, level, lesson_order FROM lessons ORDER BY lesson_order ASC LIMIT 8")->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {}
 
+// Engagement metrics
+$totalLikes = 0;
+try { $totalLikes = (int)$db->query("SELECT COUNT(*) FROM likes")->fetchColumn(); } catch (Exception $e) {}
+
+$totalComments = 0;
+try { $totalComments = (int)$db->query("SELECT COUNT(*) FROM comments")->fetchColumn(); } catch (Exception $e) {}
+
+$commentsByStatus = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+try {
+    $rows = $db->query("SELECT status, COUNT(*) as c FROM comments GROUP BY status")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as $r) { if (isset($commentsByStatus[$r['status']])) $commentsByStatus[$r['status']] = (int)$r['c']; }
+} catch (Exception $e) {}
+
+$engByType = [];
+try {
+    $types = $db->query("SELECT DISTINCT content_type FROM likes UNION SELECT DISTINCT content_type FROM comments")->fetchAll(PDO::FETCH_COLUMN);
+    foreach ($types as $type) {
+        $likes = 0; $coms = 0;
+        try { $likes = (int)$db->query("SELECT COUNT(*) FROM likes WHERE content_type=" . $db->quote($type))->fetchColumn(); } catch (Exception $e) {}
+        try { $coms  = (int)$db->query("SELECT COUNT(*) FROM comments WHERE content_type=" . $db->quote($type))->fetchColumn(); } catch (Exception $e) {}
+        $engByType[$type] = ['likes' => $likes, 'comments' => $coms];
+    }
+} catch (Exception $e) {}
+
 closeDBConnection($db);
 ?>
 <!DOCTYPE html>
@@ -121,6 +145,16 @@ closeDBConnection($db);
                     <div class="metric-value"><?php echo $counts['translations']; ?></div>
                     <div class="metric-label">Translations</div>
                 </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color:#f43f5e;"><i class="bi bi-heart"></i></div>
+                    <div class="metric-value"><?php echo $totalLikes; ?></div>
+                    <div class="metric-label">Total Likes</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color:#667eea;"><i class="bi bi-chat"></i></div>
+                    <div class="metric-value"><?php echo $totalComments; ?></div>
+                    <div class="metric-label">Total Comments</div>
+                </div>
             </div>
 
             <!-- Charts -->
@@ -150,6 +184,40 @@ closeDBConnection($db);
                 </div>
                 <div class="card-body" style="max-width:400px;margin:0 auto;">
                     <canvas id="distChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Engagement Charts -->
+            <div class="charts-2col">
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3><i class="bi bi-chat-dots"></i> Comments by Status</h3>
+                    </div>
+                    <div class="card-body" id="commentStatusWrap">
+                        <?php if ($totalComments === 0): ?>
+                            <div class="empty-state">
+                                <i class="bi bi-chat-dots"></i>
+                                <p>No comments yet</p>
+                            </div>
+                        <?php else: ?>
+                            <canvas id="commentStatusChart"></canvas>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3><i class="bi bi-bar-chart"></i> Engagement by Content Type</h3>
+                    </div>
+                    <div class="card-body" id="engTypeWrap">
+                        <?php if ($totalLikes === 0 && $totalComments === 0): ?>
+                            <div class="empty-state">
+                                <i class="bi bi-heart"></i>
+                                <p>No engagement data yet</p>
+                            </div>
+                        <?php else: ?>
+                            <canvas id="engTypeChart"></canvas>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
 
@@ -301,6 +369,77 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
+    }
+
+    // ── Doughnut: Comments by Status ──
+    const commentStatusCtx = document.getElementById('commentStatusChart');
+    if (commentStatusCtx) {
+        new Chart(commentStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'Approved', 'Rejected'],
+                datasets: [{
+                    data: [<?php echo $commentsByStatus['pending']; ?>, <?php echo $commentsByStatus['approved']; ?>, <?php echo $commentsByStatus['rejected']; ?>],
+                    backgroundColor: ['rgba(245,158,11,0.85)', 'rgba(16,185,129,0.85)', 'rgba(239,68,68,0.85)'],
+                    borderColor: '#fff',
+                    borderWidth: 3,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+
+    // ── Bar: Engagement by Content Type ──
+    const engTypeCtx = document.getElementById('engTypeChart');
+    if (engTypeCtx) {
+        const engLabels = <?php echo json_encode(array_keys($engByType)); ?>;
+        const engLikes  = <?php echo json_encode(array_values(array_map(fn($v) => $v['likes'], $engByType))); ?>;
+        const engComs   = <?php echo json_encode(array_values(array_map(fn($v) => $v['comments'], $engByType))); ?>;
+        new Chart(engTypeCtx, {
+            type: 'bar',
+            data: {
+                labels: engLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+                datasets: [
+                    {
+                        label: 'Likes',
+                        data: engLikes,
+                        backgroundColor: 'rgba(244,63,94,0.75)',
+                        borderColor: 'rgb(244,63,94)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    },
+                    {
+                        label: 'Comments',
+                        data: engComs,
+                        backgroundColor: 'rgba(102,126,234,0.75)',
+                        borderColor: 'rgb(102,126,234)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true } }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
     }
 
 });

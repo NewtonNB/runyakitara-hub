@@ -74,6 +74,29 @@
                     </div>
                 </div>
             </div>`,
+
+        articles: (item) => {
+            const date = item.published_date
+                ? new Date(item.published_date).toLocaleDateString('en-US', {month:'short',day:'2-digit',year:'numeric'})
+                : new Date(item.created_at).toLocaleDateString('en-US', {month:'short',day:'2-digit',year:'numeric'});
+            const category = (item.category || 'news').toLowerCase();
+            return `
+            <a href="article.php?id=${item.id}" class="article-card" data-id="${item.id}" style="text-decoration:none;color:inherit;">
+                <div class="article-card-body">
+                    <div class="article-header">
+                        <span class="category-badge category-${esc(category)}">${esc(cap(item.category || 'News'))}</span>
+                        <span class="article-date"><i class="bi bi-calendar3"></i> ${date}</span>
+                    </div>
+                    <h3>${esc(item.title)}</h3>
+                    <div class="article-author"><i class="bi bi-person-circle"></i> ${esc(item.author || 'Unknown')}</div>
+                    ${item.excerpt ? `<p class="article-excerpt">${esc(item.excerpt)}</p>` : ''}
+                </div>
+                <div class="article-card-footer">
+                    <span class="article-read-more">Read More <i class="bi bi-arrow-right"></i></span>
+                    <div data-engagement data-eng-type="article" data-eng-id="${item.id}"></div>
+                </div>
+            </a>`;
+        },
     };
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -108,6 +131,7 @@
             lessons:      'api/lessons.php',
             dictionary:   'api/dictionary.php',
             translations: 'api/translations.php',
+            articles:     'api/articles.php',
         };
 
         const endpoint = apiMap[type];

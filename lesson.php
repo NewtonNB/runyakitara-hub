@@ -86,6 +86,15 @@ $readTime  = max(1, ceil($wordCount / 150));
                             <?php echo nl2br(htmlspecialchars($lesson['content'])); ?>
                         </div>
 
+                        <?php if (!empty($lesson['vocabulary'])): ?>
+                        <div class="lesson-vocabulary">
+                            <h3><i class="bi bi-book-half"></i> Vocabulary</h3>
+                            <div class="lesson-vocabulary-content">
+                                <?php echo nl2br(htmlspecialchars($lesson['vocabulary'])); ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
                         <!-- Prev / Next -->
                         <div class="lesson-nav">
                             <?php if ($prevLesson): ?>

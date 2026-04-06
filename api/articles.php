@@ -9,7 +9,7 @@ try {
     
     $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
     
-    $stmt = $db->prepare("SELECT * FROM articles ORDER BY published_date DESC LIMIT ?");
+    $stmt = $db->prepare("SELECT * FROM articles WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ?");
     $stmt->execute([$limit]);
     
     $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);

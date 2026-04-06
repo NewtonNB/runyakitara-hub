@@ -68,7 +68,7 @@ $readTime  = max(1, ceil($wordCount / 200));
                     <?php if (!empty($article['author'])): ?>
                         <span><i class="bi bi-person-circle"></i> <?php echo htmlspecialchars($article['author']); ?></span>
                     <?php endif; ?>
-                    <span><i class="bi bi-calendar3"></i> <?php echo date('F d, Y', strtotime($article['created_at'])); ?></span>
+                    <span><i class="bi bi-calendar3"></i> <?php echo date('F d, Y', strtotime(!empty($article['published_date']) ? $article['published_date'] : $article['created_at'])); ?></span>
                     <span><i class="bi bi-clock"></i> <?php echo $readTime; ?> min read</span>
                     <span><i class="bi bi-book"></i> <?php echo number_format($wordCount); ?> words</span>
                 </div>

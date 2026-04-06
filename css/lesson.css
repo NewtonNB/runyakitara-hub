@@ -139,6 +139,38 @@
 }
 
 /* ----------------------------------------
+   Vocabulary section
+   ---------------------------------------- */
+.lesson-vocabulary {
+    background: #fff;
+    border-radius: 20px;
+    border-left: 4px solid #8b5cf6;
+    padding: 24px;
+    margin-top: 24px;
+}
+
+.lesson-vocabulary h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 16px;
+}
+
+.lesson-vocabulary h3 i {
+    color: #8b5cf6;
+    font-size: 20px;
+}
+
+.lesson-vocabulary-content {
+    font-size: 15px;
+    color: #334155;
+    line-height: 1.8;
+}
+
+/* ----------------------------------------
    Prev / Next nav
    ---------------------------------------- */
 .lesson-nav {

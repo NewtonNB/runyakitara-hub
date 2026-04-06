@@ -856,6 +856,43 @@
     font-weight: 600;
 }
 
+.media-filter-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+.filter-btn {
+    padding: 8px 22px;
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    background: white;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.filter-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+}
+
+.type-image {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
 /* ========================================
    TRANSLATIONS PAGE
    ======================================== */

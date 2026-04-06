@@ -62,6 +62,20 @@
                     <span class="nav-badge"><?php echo $stats['contact_messages']; ?></span>
                 <?php endif; ?>
             </a>
+            <a href="comments-manage.php" class="nav-item <?php echo basename($_SERVER['PHP_SELF']) === 'comments-manage.php' ? 'active' : ''; ?>">
+                <i class="bi bi-chat-dots"></i>
+                <span>Comments</span>
+                <?php
+                try {
+                    $__db = getDBConnection();
+                    $__pendingComments = (int)$__db->query("SELECT COUNT(*) FROM comments WHERE status != 'approved'")->fetchColumn();
+                    closeDBConnection($__db);
+                    if ($__pendingComments > 0): ?>
+                        <span class="nav-badge"><?php echo $__pendingComments; ?></span>
+                    <?php endif;
+                } catch (Exception $__e) {}
+                ?>
+            </a>
         </div>
         
         <div class="nav-section">

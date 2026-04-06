@@ -46,9 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $content = $_POST['content'] ?? '';
             $author = $_POST['author'] ?? '';
             $category = $_POST['category'] ?? '';
+            $excerpt = $_POST['excerpt'] ?? '';
+            $published_date = !empty($_POST['published_date']) ? $_POST['published_date'] : null;
             
-            $stmt = $db->prepare("INSERT INTO articles (title, content, author, category, created_at) VALUES (?, ?, ?, ?, NOW())");
-            if ($stmt->execute([$title, $content, $author, $category])) {
+            $stmt = $db->prepare("INSERT INTO articles (title, content, author, category, excerpt, published_date, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+            if ($stmt->execute([$title, $content, $author, $category, $excerpt, $published_date])) {
                 $message = 'Article added successfully!';
                 $messageType = 'success';
             }
@@ -64,9 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $content = $_POST['content'] ?? '';
             $author = $_POST['author'] ?? '';
             $category = $_POST['category'] ?? '';
+            $excerpt = $_POST['excerpt'] ?? '';
+            $published_date = !empty($_POST['published_date']) ? $_POST['published_date'] : null;
             
-            $stmt = $db->prepare("UPDATE articles SET title=?, content=?, author=?, category=? WHERE id=?");
-            if ($stmt->execute([$title, $content, $author, $category, $id])) {
+            $stmt = $db->prepare("UPDATE articles SET title=?, content=?, author=?, category=?, excerpt=?, published_date=? WHERE id=?");
+            if ($stmt->execute([$title, $content, $author, $category, $excerpt, $published_date, $id])) {
                 $message = 'Article updated successfully!';
                 $messageType = 'success';
             }
@@ -258,6 +262,17 @@ closeDBConnection($db);
                         <textarea id="modalContent" name="content" required minlength="50"
                                   placeholder="Write your article content here..."></textarea>
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="modalExcerpt">Excerpt</label>
+                        <textarea id="modalExcerpt" name="excerpt" rows="3"
+                                  placeholder="Short summary of the article (optional)..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modalPublishedDate">Published Date</label>
+                        <input type="date" id="modalPublishedDate" name="published_date">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="modal-btn modal-btn-secondary" onclick="closeModal()">
@@ -330,6 +345,8 @@ closeDBConnection($db);
             document.getElementById('modalAuthor').value = article.author;
             document.getElementById('modalCategory').value = article.category;
             document.getElementById('modalContent').value = article.content;
+            document.getElementById('modalExcerpt').value = article.excerpt || '';
+            document.getElementById('modalPublishedDate').value = article.published_date || '';
             resetFormValidation('articleForm');
             document.getElementById('articleModal').classList.add('active');
             document.body.classList.add('modal-open');
