@@ -86,6 +86,12 @@ if (isset($_GET['view']) || isset($_GET['id'])) {
     $stmt = $db->prepare("SELECT * FROM contact_messages WHERE id=?");
     $stmt->execute([$viewId]);
     $viewMessage = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Auto-mark as 'pending' when opened from notification bell (was 'new')
+    if ($viewMessage && $viewMessage['status'] === 'new') {
+        $db->prepare("UPDATE contact_messages SET status='pending' WHERE id=?")->execute([$autoOpenId]);
+        $viewMessage['status'] = 'pending'; // update local copy too
+    }
 }
 
 closeDBConnection($db);
@@ -301,6 +307,27 @@ closeDBConnection($db);
             document.getElementById('modalMessageId').value = message.id;
             document.getElementById('modalFrom').value = from || '';
             document.querySelector('select[name="status"]').value = message.status;
+
+            // Auto-mark as pending when opened if still 'new'
+            if (message.status === 'new') {
+                const fd = new FormData();
+                fd.append('action', 'update_status');
+                fd.append('id', message.id);
+                fd.append('status', 'pending');
+                fetch('messages-manage.php', { method: 'POST', body: fd })
+                    .then(() => {
+                        message.status = 'pending';
+                        document.querySelector('select[name="status"]').value = 'pending';
+                        // Update the card badge
+                        const card = document.querySelector(`.message-card[data-status="new"]`);
+                        if (card && card.querySelector('.message-status')) {
+                            card.dataset.status = 'pending';
+                            card.classList.replace('new', 'pending');
+                            card.querySelector('.message-status').textContent = 'Pending';
+                            card.querySelector('.message-status').className = 'message-status status-pending';
+                        }
+                    }).catch(() => {});
+            }
             
             document.getElementById('modalBody').innerHTML = `
                 <div class="message-detail">
