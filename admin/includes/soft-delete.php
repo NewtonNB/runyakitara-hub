@@ -4,7 +4,7 @@
  */
 function ensureSoftDelete($db) {
     // MySQL: silently add deleted_at if missing
-    $tables = ['lessons', 'dictionary', 'proverbs', 'articles', 'grammar_topics', 'media', 'translations'];
+    $tables = ['lessons', 'dictionary', 'proverbs', 'articles', 'grammar_topics', 'media', 'translations', 'contact_messages'];
     foreach ($tables as $table) {
         try {
             $db->exec("ALTER TABLE `$table` ADD COLUMN deleted_at DATETIME DEFAULT NULL");

@@ -23,6 +23,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$status, $id]);
         }
         closeDBConnection($db);
+        // If AJAX request, return JSON
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) || isset($_POST['ajax'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
+            exit;
+        }
         // If came from notification (via ?id=), go back to dashboard so bell updates
         $from = $_POST['from'] ?? '';
         if ($from === 'notification') {
@@ -314,19 +320,23 @@ closeDBConnection($db);
                 fd.append('action', 'update_status');
                 fd.append('id', message.id);
                 fd.append('status', 'pending');
-                fetch('messages-manage.php', { method: 'POST', body: fd })
-                    .then(() => {
-                        message.status = 'pending';
-                        document.querySelector('select[name="status"]').value = 'pending';
-                        // Update the card badge
-                        const card = document.querySelector(`.message-card[data-status="new"]`);
-                        if (card && card.querySelector('.message-status')) {
-                            card.dataset.status = 'pending';
-                            card.classList.replace('new', 'pending');
-                            card.querySelector('.message-status').textContent = 'Pending';
-                            card.querySelector('.message-status').className = 'message-status status-pending';
-                        }
-                    }).catch(() => {});
+                fd.append('ajax', '1');
+                fetch('messages-manage.php', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: fd
+                }).then(() => {
+                    message.status = 'pending';
+                    document.querySelector('select[name="status"]').value = 'pending';
+                    // Update the card badge
+                    const card = document.querySelector(`.message-card[data-status="new"]`);
+                    if (card && card.querySelector('.message-status')) {
+                        card.dataset.status = 'pending';
+                        card.classList.replace('new', 'pending');
+                        card.querySelector('.message-status').textContent = 'Pending';
+                        card.querySelector('.message-status').className = 'message-status status-pending';
+                    }
+                }).catch(() => {});
             }
             
             document.getElementById('modalBody').innerHTML = `
