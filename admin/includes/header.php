@@ -205,7 +205,7 @@ try {
                 </div>
             </div>
             
-            <button class="header-action">
+            <button class="header-action" onclick="location.href='settings.php'" title="Settings">
                 <i class="bi bi-gear"></i>
             </button>
             <a href="../index.php" class="header-action" title="View Website">
@@ -214,3 +214,31 @@ try {
         </div>
     </div>
 </header>
+
+<script>
+(function() {
+    var btn      = document.getElementById('notificationBtn');
+    var dropdown = document.getElementById('notificationDropdown');
+    var toggle   = document.getElementById('mobileToggle');
+    var sidebar  = document.getElementById('sidebar');
+
+    if (btn && dropdown) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('active');
+        });
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target) && e.target !== btn) {
+                dropdown.classList.remove('active');
+            }
+        });
+        dropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+    }
+
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+        });
+    }
+})();
+</script>
