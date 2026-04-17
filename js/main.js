@@ -1,31 +1,8 @@
-// Mobile menu toggle
+// ========================================
+// MODERN NAVBAR FUNCTIONALITY
+// ========================================
+
 document.addEventListener('DOMContentLoaded', function() {
-    const mobileToggle = document.querySelector('.mobile-toggle');
-    const navLinks = document.querySelector('.nav-links');
-
-    // Mobile menu toggle
-    if (mobileToggle && navLinks) {
-        mobileToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            navLinks.classList.toggle('active');
-            this.innerHTML = navLinks.classList.contains('active') 
-                ? '<i class="bi bi-x-lg"></i>' 
-                : '<i class="bi bi-list"></i>';
-        });
-    }
-
-    // Close mobile menu when clicking outside
-    if (navLinks) {
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.navbar-modern')) {
-                navLinks.classList.remove('active');
-                if (mobileToggle) {
-                    mobileToggle.innerHTML = '<i class="bi bi-list"></i>';
-                }
-            }
-        });
-    }
-
     // Smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
@@ -401,11 +378,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Dropdown toggle for mobile
     dropdownItems.forEach(item => {
-        const link = item.querySelector('.nav-link');
+        const link = item.querySelector(':scope > .nav-link');
+        if (!link) return;
         link.addEventListener('click', function(e) {
             if (window.innerWidth <= 768) {
                 e.preventDefault();
-                item.classList.toggle('active');
+                e.stopPropagation(); // prevent outside-click handler from closing menu
+                const isOpen = item.classList.contains('active');
+                // Close all other dropdowns first
+                dropdownItems.forEach(other => { if (other !== item) other.classList.remove('active'); });
+                item.classList.toggle('active', !isOpen);
             }
         });
     });
