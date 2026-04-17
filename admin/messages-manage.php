@@ -121,12 +121,14 @@ closeDBConnection($db);
         .message-card {
             background: white;
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
             border: 1px solid rgba(226,232,240,0.8);
             border-left: 4px solid transparent;
             transition: all 0.2s ease;
             cursor: pointer;
+            overflow: hidden;
+            min-width: 0;
         }
         .message-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
         .message-card.new     { border-left-color: var(--info); background: linear-gradient(to right, rgba(59,130,246,0.04), white); }
@@ -135,13 +137,13 @@ closeDBConnection($db);
         .message-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
         .message-sender { flex: 1; }
         .sender-name { font-size: 17px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
-        .sender-email { font-size: 13px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+        .sender-email { font-size: 13px; color: var(--text-light); display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
         .message-status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: capitalize; }
         .status-new       { background: rgba(59,130,246,0.1); color: var(--info); }
         .status-pending   { background: rgba(245,158,11,0.1); color: #d97706; }
         .status-completed { background: rgba(16,185,129,0.1); color: var(--success); }
         .message-subject { font-size: 15px; font-weight: 600; color: var(--dark); margin-bottom: 10px; }
-        .message-preview { font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .message-preview { font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; overflow-wrap: anywhere; }
         .message-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid var(--border); }
         .message-date { font-size: 13px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
         .message-actions { display: flex; gap: 8px; }
@@ -161,6 +163,18 @@ closeDBConnection($db);
         .detail-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); margin-bottom: 6px; }
         .detail-value { font-size: 15px; color: var(--text); line-height: 1.6; }
         .modal-footer { padding: 20px 30px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+
+        @media (max-width: 768px) {
+            .filter-tabs { padding: 12px 14px; gap: 6px; }
+            .filter-tab { padding: 7px 12px; font-size: 12px; }
+            .message-card { padding: 16px; }
+            .sender-name { font-size: 15px; }
+            .sender-email { font-size: 12px; }
+            .message-subject { font-size: 14px; }
+            .message-preview { font-size: 13px; }
+            .message-footer { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .message-actions { width: 100%; justify-content: flex-end; }
+        }
     </style>
 </head>
 <body class="admin-body">
