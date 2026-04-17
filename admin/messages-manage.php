@@ -29,13 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => true]);
             exit;
         }
-        // If came from notification (via ?id=), go back to dashboard so bell updates
-        $from = $_POST['from'] ?? '';
-        if ($from === 'notification') {
-            header('Location: dashboard.php?msg_updated=1');
-        } else {
-            header('Location: messages-manage.php?updated=1');
-        }
+        // Always redirect back to messages page
+        header('Location: messages-manage.php?updated=1');
         exit;
     } elseif ($action === 'delete') {
         $id = (int)($_POST['id'] ?? 0);
